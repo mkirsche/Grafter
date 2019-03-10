@@ -31,8 +31,9 @@ public static void main(String[] args) throws IOException
 	}
 	
 	System.out.println("Found " + readNames.size() + " relevant reads");
+	System.out.println(readNames);
 	System.out.println("Found " + contigNames.size() + " relevant contigs");
-	
+	System.out.println(contigNames);
 	/*
 	 * Get sequences for relevant reads/sequences
 	 */
