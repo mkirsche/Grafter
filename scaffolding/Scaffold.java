@@ -50,7 +50,7 @@ public static void main(String[] args) throws IOException
 	for(int i = 0; i<als.size(); i += 2)
 	{
 		PafAlignment first = als.get(i), second = als.get(i+1);
-		System.out.println(first+" "+second);
+		System.out.println(first.line+" " + second.line);
 	}
 }
 static HashMap<String, String> readMap(String fn) throws IOException
@@ -101,7 +101,6 @@ static HashMap<String, String> getFastaMap(String fn, HashSet<String> names) thr
 {
 	HashMap<String, String> res = new HashMap<String, String>();
 	BufferedReader br = new BufferedReader(new FileReader(new File(fn)));
-	boolean keep = false;
 	String readName = br.readLine().substring(1);
 	StringBuilder seq = new StringBuilder("");
 	boolean useful = names.contains(readName);
@@ -119,6 +118,7 @@ static HashMap<String, String> getFastaMap(String fn, HashSet<String> names) thr
 				}
 				// new read name
 				readName = line.substring(1);
+				System.out.println(readName+" "+names.contains(readName));
 				useful = names.contains(readName);
 			}
 			else if(useful)
