@@ -118,7 +118,7 @@ static HashMap<String, String> getFastaMap(String fn, HashSet<String> names) thr
 				readName = line.substring(1);
 				useful = names.contains(readName);
 			}
-			else
+			else if(useful)
 			{
 				seq.append(line);
 			}
