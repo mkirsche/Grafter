@@ -9,7 +9,7 @@ public class Scaffold {
 public static void main(String[] args) throws IOException
 {
 	String fn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/rel2_200kplus_ccs_useful.paf";
-	String fastafn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/paternal_and_unknown.contigs.mmpoa.fa";
+	String fastaFn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/paternal_and_unknown.contigs.mmpoa.fa";
 	String readFn = "/scratch/groups/mschatz1/mkirsche/ultralong/rel2_200kplus.fastq";
 	String readMapFile = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/readmap_paternal.txt";
 	String contigMapFile = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/contigmap_paternal.txt";
@@ -40,7 +40,7 @@ public static void main(String[] args) throws IOException
 	}
 	if((contigMap = readMap(contigMapFile)).size() == 0)
 	{
-		contigMap = getFastaMap(readFn, contigNames);
+		contigMap = getFastaMap(fastaFn, contigNames);
 		writeMap(contigMapFile, contigMap);
 	}
 	
