@@ -8,8 +8,8 @@ import java.io.*;
 public class FindUsefulScaffoldingAlignments {
 public static void  main(String[] args) throws IOException
 {
-	String pafFn = "rel2_200kplus_ccs.paf";
-	String outFn = "rel2_200kplus_ccs_useful.paf";
+	String pafFn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/rel2_200kplus_ccs.paf";
+	String outFn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/rel2_200kplus_ccs_useful.paf";
 	Scanner input = new Scanner(new FileInputStream(new File(pafFn)));
 	PrintWriter out = new PrintWriter(new File(outFn));
 	HashMap<String, ArrayList<PafAlignment>> alignmentsPerRead = new HashMap<>();
