@@ -61,6 +61,7 @@ public static void  main(String[] args) throws IOException
 			out.println(first.line + "\n" + second.line);
 			tot++;
 		}
+	out.close();
 	System.err.println("Number of useful alignments: " + tot);
 }
 static class PafAlignment
