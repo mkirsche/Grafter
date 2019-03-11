@@ -6,18 +6,32 @@ import scaffolding.FindUsefulScaffoldingAlignments.PafAlignment;
 
 import java.io.*;
 public class Scaffold {
+	static int maxHanging = 100;
 public static void main(String[] args) throws IOException
 {
-	String fn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/rel2_200kplus_ccs_useful.paf";
-	String fastaFn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/paternal_and_unknown.contigs.mmpoa.fa";
-	String readFn = "/scratch/groups/mschatz1/mkirsche/ultralong/rel2_200kplus.fastq";
-	String readMapFile = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/readmap_paternal.txt";
-	String contigMapFile = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/contigmap_paternal.txt";
-	Scanner input = new Scanner(new FileInputStream(new File(fn)));
+	String fn = "rel2_200kplus_ccs_useful.paf";
+	String fastaFn = "";
+	String readFn = "";
+	String readMapFile = "readmap_paternal.txt";
+	String contigMapFile = "contigmap_paternal.txt";
+	String outFile = "paternal_newcontigs.fa";
+	
+	if(args.length > 0 && args[0].equals("--server"))
+	{
+		fn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/rel2_200kplus_ccs_useful.paf";
+		fastaFn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/paternal_and_unknown.contigs.mmpoa.fa";
+		readFn = "/scratch/groups/mschatz1/mkirsche/ultralong/rel2_200kplus.fastq";
+		readMapFile = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/readmap_paternal.txt";
+		contigMapFile = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/contigmap_paternal.txt";
+		outFile = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/paternal_newcontigs.fa";
+	}
+	
 	ArrayList<PafAlignment> als = new ArrayList<PafAlignment>();
 	HashSet<String> readNames = new HashSet<String>();
 	HashSet<String> contigNames = new HashSet<String>();
+	
 	HashMap<String, String> readMap, contigMap;
+	Scanner input = new Scanner(new FileInputStream(new File(fn)));
 	
 	/*
 	 * Read paf alignments and store names of relevant reads/contigs
@@ -48,11 +62,103 @@ public static void main(String[] args) throws IOException
 		writeMap(contigMapFile, contigMap);
 	}
 	
+	HashMap<String, HashSet<String>> countPrefix = new HashMap<String, HashSet<String>>();
+	HashMap<String, HashSet<String>> countSuffix = new HashMap<String, HashSet<String>>();
+	
 	for(int i = 0; i<als.size(); i += 2)
 	{
 		PafAlignment first = als.get(i), second = als.get(i+1);
-		System.out.println(first.line+" " + second.line);
+		
+		if(first.contigStart < maxHanging)
+		{
+			mapAdd(countPrefix, first.contigName, second.contigName);
+		}
+		if(first.contigEnd + maxHanging > first.contigLength)
+		{
+			mapAdd(countSuffix, first.contigName, second.contigName);
+		}
+		if(second.contigStart < maxHanging)
+		{
+			mapAdd(countPrefix, second.contigName, first.contigName);
+		}
+		if(second.contigEnd + maxHanging > second.contigLength)
+		{
+			mapAdd(countSuffix, second.contigName, first.contigName);
+		}
 	}
+	for(String s : countPrefix.keySet())
+	{
+		System.err.println(s+" "+countPrefix.get(s).size() + " " +  (countSuffix.containsKey(s) ? countSuffix.get(s).size() : 0));
+	}
+	for(String s : countSuffix.keySet())
+	{
+		System.err.println(s+" "+countSuffix.get(s).size() + " " +  (countPrefix.containsKey(s) ? countPrefix.get(s).size() : 0));
+	}
+	
+	PrintWriter out = new PrintWriter(new File(outFile));
+	
+	HashSet<String> joinedPref = new HashSet<String>();
+	HashSet<String> joinedSuff = new HashSet<String>();
+	
+	for(int i = 0; i<als.size(); i += 2)
+	{
+		PafAlignment first = als.get(i), second = als.get(i+1);
+		boolean firstPref = first.contigStart < maxHanging;
+		boolean firstSuff = first.contigEnd + maxHanging > first.contigLength;
+		boolean secondPref = second.contigStart < maxHanging;
+		boolean secondSuff = second.contigEnd + maxHanging > second.contigLength;
+		
+		if(firstPref && firstSuff) continue;
+		if(secondPref && secondSuff) continue;
+		if(firstPref && joinedPref.contains(first.contigName)) continue;
+		if(firstSuff && joinedSuff.contains(first.contigName)) continue;
+		if(secondPref && joinedPref.contains(second.contigName)) continue;
+		if(secondSuff && joinedSuff.contains(second.contigName)) continue;
+		if(!contigMap.containsKey(first.contigName) || !contigMap.containsKey(second.contigName)) continue;
+		
+		String firstSeq = contigMap.get(first.contigName);
+		String secondSeq = contigMap.get(second.contigName);
+		
+		String seq = firstPref ? reverseComplement(firstSeq) : firstSeq;
+		String seq2 = secondPref ? secondSeq : reverseComplement(secondSeq);
+		
+		int overlap1 = first.contigEnd - first.contigStart;
+		int overlap2 = second.contigEnd - second.contigStart;
+		int extraAligned = first.readEnd - second.readStart;
+		
+		String nname = first.contigName + "&" + second.contigName;
+		String stitched = stitch(seq, seq2, overlap1, overlap2, extraAligned);
+		
+		out.println(">" + nname);
+		out.println(stitched);
+		contigMap.remove(first.contigName);
+		contigMap.remove(second.contigName);
+		contigMap.put(nname, stitched);
+	}
+	out.close();
+}
+static String stitch(String seq1, String seq2, int overlap1, int overlap2, int extra)
+{
+	return seq1 + seq2.substring(extra);
+}
+static String reverseComplement(String s)
+{
+	int n = s.length();
+	char[] res = new char[n];
+	for(int i = 0; i<n; i++)
+	{
+		char c = s.charAt(n-1-i);
+		if(c == 'a' || c == 'A') res[i] = (char)(c + 'T' - 'A');
+		if(c == 'c' || c == 'C') res[i] = (char)(c + 'G' - 'C');
+		if(c == 'g' || c == 'G') res[i] = (char)(c + 'C' - 'G');
+		if(c == 't' || c == 'T') res[i] = (char)(c + 'A' - 'T');
+	}
+	return new String(res);
+}
+static void mapAdd(HashMap<String, HashSet<String>> map, String s, String t)
+{
+	if(!map.containsKey(s)) map.put(s, new HashSet<String>());
+	map.get(s).add(t);
 }
 static HashMap<String, String> readMap(String fn) throws IOException
 {
@@ -119,7 +225,6 @@ static HashMap<String, String> getFastaMap(String fn, HashSet<String> names) thr
 				}
 				// new read name
 				readName = line.split(" ")[0].substring(1);
-				System.out.println(readName+" "+names.contains(readName));
 				useful = names.contains(readName);
 			}
 			else if(useful)
