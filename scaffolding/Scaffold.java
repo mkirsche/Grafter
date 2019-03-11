@@ -88,7 +88,7 @@ static HashMap<String, String> getFastqMap(String fn, HashSet<String> names)  th
 	while(true)
 	{
 		try {
-			String name = br.readLine().substring(1);
+			String name = br.readLine().substring(1).split(" ")[0];
 			if(names.contains(name)) res.put(name, br.readLine());
 			else br.readLine();
 			for(int i = 0; i<2; i++) br.readLine();
@@ -102,7 +102,7 @@ static HashMap<String, String> getFastaMap(String fn, HashSet<String> names) thr
 {
 	HashMap<String, String> res = new HashMap<String, String>();
 	BufferedReader br = new BufferedReader(new FileReader(new File(fn)));
-	String readName = br.readLine().substring(1);
+	String readName = br.readLine().split(" ")[0].substring(1);
 	StringBuilder seq = new StringBuilder("");
 	boolean useful = names.contains(readName);
 	while(true)
@@ -118,7 +118,7 @@ static HashMap<String, String> getFastaMap(String fn, HashSet<String> names) thr
 					seq = new StringBuilder("");
 				}
 				// new read name
-				readName = line.substring(1);
+				readName = line.split(" ")[0].substring(1);
 				System.out.println(readName+" "+names.contains(readName));
 				useful = names.contains(readName);
 			}
