@@ -26,6 +26,16 @@ public static void main(String[] args) throws IOException
 		outFile = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/paternal_newcontigs.fa";
 	}
 	
+	else if(args.length >= 6)
+	{
+		fn = args[0];
+		fastaFn = args[1];
+		readFn = args[2];
+		readMapFile = args[3];
+		contigMapFile = args[4];
+		outFile = args[5];
+	}
+	
 	ArrayList<PafAlignment> als = new ArrayList<PafAlignment>();
 	HashSet<String> readNames = new HashSet<String>();
 	HashSet<String> contigNames = new HashSet<String>();

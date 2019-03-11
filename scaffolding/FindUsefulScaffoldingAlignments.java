@@ -8,11 +8,20 @@ import java.io.*;
 public class FindUsefulScaffoldingAlignments {
 public static void  main(String[] args) throws IOException
 {
-	//String pafFn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/rel2_200kplus_ccs.paf";
-	//String outFn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/rel2_200kplus_ccs_useful.paf";
-	
 	String pafFn = "rel2_200kplus_ccs.paf";
 	String outFn = "rel2_200kplus_ccs_useful.paf";
+	
+	if(args.length > 0 && args[0].equals("--server"))
+	{
+		pafFn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/rel2_200kplus_ccs.paf";
+		outFn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/rel2_200kplus_ccs_useful.paf";
+	}
+	
+	else if(args.length >= 2)
+	{
+		pafFn = args[0];
+		outFn = args[1];
+	}
 	
 	Scanner input = new Scanner(new FileInputStream(new File(pafFn)));
 	PrintWriter out = new PrintWriter(new File(outFn));

@@ -10,6 +10,13 @@ public static void main(String[] args) throws IOException
 	String extraFastaFn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/paternal_newcontigs.fa";
 	String outfn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/paternal_and_unknown.contigs.mmpoa.scaffolds.fa";
 	
+	if(args.length >= 3)
+	{
+		fastaFn = args[0];
+		extraFastaFn = args[1];
+		outfn = args[2];
+	}
+	
 	PrintWriter out = new PrintWriter(new File(outfn));
 	
 	HashSet<String> used = new HashSet<String>();
