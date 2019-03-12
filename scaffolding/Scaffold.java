@@ -123,6 +123,9 @@ public static void main(String[] args) throws IOException
 		boolean secondPref = second.contigStart < maxHanging;
 		boolean secondSuff = second.contigEnd + maxHanging > second.contigLength;
 		
+		boolean fp = firstPref;
+		boolean sp = secondPref;
+		
 		if(firstPref && firstSuff) continue;
 		if(secondPref && secondSuff) continue;
 		if(firstPref && joinedPref.contains(first.contigName)) continue;
@@ -133,7 +136,7 @@ public static void main(String[] args) throws IOException
 		String firstName = first.contigName;
 		String secondName = second.contigName;
 		
-		System.err.println("Candidate join between " + firstName + " and " + secondName);
+		System.err.println("Candidate join between " + firstName + " and " + secondName + " " +firstPref+" "+secondPref);
 		
 		if(!contigMap.containsKey(first.contigName))
 		{
@@ -189,6 +192,11 @@ public static void main(String[] args) throws IOException
 		{
 			scaffoldEnders.remove(secondName);
 		}
+		if(fp) joinedPref.add(firstName);
+		else joinedSuff.add(firstName);
+		
+		if(sp) joinedPref.add(secondName);
+		else joinedSuff.add(secondName);
 		
 		String firstSeq = contigMap.get(first.contigName);
 		String secondSeq = contigMap.get(second.contigName);
@@ -210,8 +218,8 @@ public static void main(String[] args) throws IOException
 		
 		out.println(">" + nname);
 		out.println(stitched);
-		//contigMap.remove(first.contigName);
-		//contigMap.remove(second.contigName);
+		contigMap.remove(first.contigName);
+		contigMap.remove(second.contigName);
 		contigMap.put(nname, stitched);
 	}
 	
