@@ -17,13 +17,16 @@ javac $BINDIR/scaffolding/*.java
 usefulpaf=$paffn'_useful.paf'
 echo 'Finding useful alignments'
 java -cp $BINDIR scaffolding.FindUsefulScaffoldingAlignments $paffn $usefulpaf
+echo 'Useful alignments output to '$usefulpaf
 
 readmap=$readsfn'_usefulmap.paf'
 contigmap=$contigsfn'_usefulmap.paf'
 newcontigs=$contigsfn'_newcontigs.paf'
 echo 'Scaffolding'
 java -cp $BINDIR scaffolding.Scaffold $usefulpaf $contigsfn $readsfn $readmap $contigmap $newcontigs
+echo 'Scaffolds output to '$newcontigs
 
 outfile=$4
 echo 'Integrating scaffolds into assembly'
 java -cp $BINDIR scaffolding.Scaffold $contigsfn $newcontigs $outfile
+echo 'Final assembly output to '$outfile
