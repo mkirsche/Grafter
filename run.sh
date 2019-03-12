@@ -1,6 +1,7 @@
 contigsfn=$1
 readsfn=$2
 paffn=$3
+outfile=$4
 
 minimappath='~/github/minimap2/minimap2'
 
@@ -26,7 +27,6 @@ echo 'Scaffolding'
 java -cp $BINDIR scaffolding.Scaffold $usefulpaf $contigsfn $readsfn $readmap $contigmap $newcontigs
 echo 'Scaffolds output to '$newcontigs
 
-outfile=$4
 echo 'Integrating scaffolds into assembly'
-java -cp $BINDIR scaffolding.Scaffold $contigsfn $newcontigs $outfile
+java -cp $BINDIR scaffolding.StitchFasta $contigsfn $newcontigs $outfile
 echo 'Final assembly output to '$outfile
