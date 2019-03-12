@@ -133,6 +133,8 @@ public static void main(String[] args) throws IOException
 		String firstName = first.contigName;
 		String secondName = second.contigName;
 		
+		System.err.println("Candidate join between " + firstName + " and " + secondName);
+		
 		if(!contigMap.containsKey(first.contigName))
 		{
 			if(scaffoldStarters.containsKey(first.contigName))
@@ -169,6 +171,8 @@ public static void main(String[] args) throws IOException
 			}
 		}
 		
+		System.err.println("Joining");
+		
 		if(scaffoldStarters.containsKey(firstName))
 		{
 			scaffoldStarters.remove(firstName);
@@ -185,7 +189,6 @@ public static void main(String[] args) throws IOException
 		{
 			scaffoldEnders.remove(secondName);
 		}
-		
 		
 		String firstSeq = contigMap.get(first.contigName);
 		String secondSeq = contigMap.get(second.contigName);
