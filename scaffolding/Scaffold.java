@@ -108,6 +108,13 @@ public static void main(String[] args) throws IOException
 	HashSet<String> joinedPref = new HashSet<String>();
 	HashSet<String> joinedSuff = new HashSet<String>();
 	
+	HashMap<String, String> scaffoldStarters = new HashMap<String, String>();
+	HashMap<String, String> scaffoldEnders = new HashMap<String, String>();
+	
+	HashSet<String> scaffoldNames = new HashSet<String>();
+	
+	int joins = 0;
+	
 	for(int i = 0; i<als.size(); i += 2)
 	{
 		PafAlignment first = als.get(i), second = als.get(i+1);
@@ -122,7 +129,63 @@ public static void main(String[] args) throws IOException
 		if(firstSuff && joinedSuff.contains(first.contigName)) continue;
 		if(secondPref && joinedPref.contains(second.contigName)) continue;
 		if(secondSuff && joinedSuff.contains(second.contigName)) continue;
-		if(!contigMap.containsKey(first.contigName) || !contigMap.containsKey(second.contigName)) continue;
+		
+		String firstName = first.contigName;
+		String secondName = second.contigName;
+		
+		if(!contigMap.containsKey(first.contigName))
+		{
+			if(scaffoldStarters.containsKey(first.contigName))
+			{
+				firstPref = true;
+				first.contigName = scaffoldStarters.get(first.contigName);
+			}
+			else if(scaffoldEnders.containsKey(first.contigName))
+			{
+				firstPref = false;
+				first.contigName = scaffoldEnders.get(first.contigName);
+			}
+			else
+			{
+				continue;
+			}
+		}
+		
+		if(!contigMap.containsKey(second.contigName))
+		{
+			if(scaffoldStarters.containsKey(second.contigName))
+			{
+				secondPref = true;
+				second.contigName = scaffoldStarters.get(second.contigName);
+			}
+			else if(scaffoldEnders.containsKey(second.contigName))
+			{
+				secondPref = false;
+				second.contigName = scaffoldEnders.get(second.contigName);
+			}
+			else
+			{
+				continue;
+			}
+		}
+		
+		if(scaffoldStarters.containsKey(firstName))
+		{
+			scaffoldStarters.remove(firstName);
+		}
+		if(scaffoldStarters.containsKey(secondName))
+		{
+			scaffoldStarters.remove(secondName);
+		}
+		if(scaffoldEnders.containsKey(firstName))
+		{
+			scaffoldEnders.remove(firstName);
+		}
+		if(scaffoldEnders.containsKey(secondName))
+		{
+			scaffoldEnders.remove(secondName);
+		}
+		
 		
 		String firstSeq = contigMap.get(first.contigName);
 		String secondSeq = contigMap.get(second.contigName);
@@ -135,14 +198,28 @@ public static void main(String[] args) throws IOException
 		int extraAligned = first.readEnd - second.readStart;
 		
 		String nname = first.contigName + "&" + second.contigName;
+		String[] subcontigs = nname.split("&");
+		scaffoldStarters.put(subcontigs[0], nname);
+		scaffoldEnders.put(subcontigs[subcontigs.length-1], nname);
+		scaffoldNames.add(nname);
 		String stitched = stitch(seq, seq2, overlap1, overlap2, extraAligned);
+		joins++;
 		
 		out.println(">" + nname);
 		out.println(stitched);
-		contigMap.remove(first.contigName);
-		contigMap.remove(second.contigName);
+		//contigMap.remove(first.contigName);
+		//contigMap.remove(second.contigName);
 		contigMap.put(nname, stitched);
 	}
+	
+	for(String s : scaffoldNames)
+	{
+		out.println(">" + s);
+		out.println(contigMap.get(s));
+	}
+	
+	
+	System.err.println("Joins performed: " + joins);
 	out.close();
 }
 static String stitch(String seq1, String seq2, int overlap1, int overlap2, int extra)
