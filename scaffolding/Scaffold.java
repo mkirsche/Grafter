@@ -54,10 +54,8 @@ public static void main(String[] args) throws IOException
 		contigNames.add(cur.contigName);
 	}
 	
-	System.out.println("Found " + readNames.size() + " relevant reads");
-	System.out.println(readNames);
-	System.out.println("Found " + contigNames.size() + " relevant contigs");
-	System.out.println(contigNames);
+	System.err.println("Found " + readNames.size() + " relevant reads");
+	System.err.println("Found " + contigNames.size() + " relevant contigs");
 	/*
 	 * Get sequences for relevant reads/sequences
 	 */
