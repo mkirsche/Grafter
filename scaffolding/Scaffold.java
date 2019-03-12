@@ -221,6 +221,14 @@ public static void main(String[] args) throws IOException
 		for(String s : subcontigs) scaffoldID.put(s, nname);
 		scaffoldStarters.put(subcontigs[0], nname);
 		scaffoldEnders.put(subcontigs[subcontigs.length-1], nname);
+		if(scaffoldNames.contains(first.contigName))
+		{
+			scaffoldNames.remove(first.contigName);
+		}
+		if(scaffoldNames.contains(second.contigName))
+		{
+			scaffoldNames.remove(second.contigName);
+		}
 		scaffoldNames.add(nname);
 		String stitched = stitch(seq, seq2, overlap1, overlap2, extraAligned);
 		joins++;
