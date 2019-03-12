@@ -233,8 +233,6 @@ public static void main(String[] args) throws IOException
 		String stitched = stitch(seq, seq2, overlap1, overlap2, extraAligned);
 		joins++;
 		
-		out.println(">" + nname);
-		out.println(stitched);
 		contigMap.remove(first.contigName);
 		contigMap.remove(second.contigName);
 		contigMap.put(nname, stitched);
