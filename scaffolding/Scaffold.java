@@ -113,6 +113,8 @@ public static void main(String[] args) throws IOException
 	
 	HashSet<String> scaffoldNames = new HashSet<String>();
 	
+	HashMap<String, String> scaffoldID = new HashMap<String, String>();
+	
 	int joins = 0;
 	
 	for(int i = 0; i<als.size(); i += 2)
@@ -135,6 +137,12 @@ public static void main(String[] args) throws IOException
 		
 		String firstName = first.contigName;
 		String secondName = second.contigName;
+		
+		if(scaffoldID.containsKey(firstName) && scaffoldID.containsKey(secondName) 
+				&& scaffoldID.get(firstName).equals(scaffoldID.get(secondName)))
+		{
+			continue;
+		}
 		
 		System.err.println("Candidate join between " + firstName + " and " + secondName + " " +firstPref+" "+secondPref);
 		
@@ -210,6 +218,7 @@ public static void main(String[] args) throws IOException
 		
 		String nname = first.contigName + "&" + second.contigName;
 		String[] subcontigs = nname.split("&");
+		for(String s : subcontigs) scaffoldID.put(s, nname);
 		scaffoldStarters.put(subcontigs[0], nname);
 		scaffoldEnders.put(subcontigs[subcontigs.length-1], nname);
 		scaffoldNames.add(nname);
