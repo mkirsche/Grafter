@@ -6,6 +6,7 @@ Scaffolding assemblies with long-read alignments
 import java.util.*;
 import java.io.*;
 public class FindUsefulScaffoldingAlignments {
+@SuppressWarnings("resource")
 public static void  main(String[] args) throws IOException
 {
 	String pafFn = "rel2_200kplus_ccs.paf";
@@ -26,10 +27,8 @@ public static void  main(String[] args) throws IOException
 	Scanner input = new Scanner(new FileInputStream(new File(pafFn)));
 	PrintWriter out = new PrintWriter(new File(outFn));
 	HashMap<String, ArrayList<PafAlignment>> alignmentsPerRead = new HashMap<>();
-	int numAlignments = 0;
 	while(input.hasNext())
 	{
-		numAlignments++;
 		String line = input.nextLine();
 		PafAlignment cur = new PafAlignment(line);
 		String readName = cur.readName;
@@ -52,7 +51,7 @@ public static void  main(String[] args) throws IOException
 			{
 				continue;
 			}
-			if(Math.abs(first.readEnd - first.readStart) < 50000 || Math.abs(second.readEnd - second.readStart) < 50000)
+			if(Math.abs(first.readEnd - first.readStart) < 10000 || Math.abs(second.readEnd - second.readStart) < 10000)
 			{
 				continue;
 			}

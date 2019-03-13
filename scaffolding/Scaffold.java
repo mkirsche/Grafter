@@ -7,6 +7,8 @@ import scaffolding.FindUsefulScaffoldingAlignments.PafAlignment;
 import java.io.*;
 public class Scaffold {
 	static int maxHanging = 100;
+	
+@SuppressWarnings("resource")
 public static void main(String[] args) throws IOException
 {
 	String fn = "rel2_200kplus_ccs_useful.paf";
@@ -271,6 +273,7 @@ static void mapAdd(HashMap<String, HashSet<String>> map, String s, String t)
 	if(!map.containsKey(s)) map.put(s, new HashSet<String>());
 	map.get(s).add(t);
 }
+@SuppressWarnings("resource")
 static HashMap<String, String> readMap(String fn) throws IOException
 {
 	try {
@@ -298,6 +301,7 @@ static void writeMap(String fn, HashMap<String, String> map) throws IOException
 	}
 	out.close();
 }
+@SuppressWarnings("resource")
 static HashMap<String, String> getFastqMap(String fn, HashSet<String> names)  throws IOException
 {
 	HashMap<String, String> res = new HashMap<String, String>();
@@ -315,6 +319,7 @@ static HashMap<String, String> getFastqMap(String fn, HashSet<String> names)  th
 	}
 	return res;
 }
+@SuppressWarnings("resource")
 static HashMap<String, String> getFastaMap(String fn, HashSet<String> names) throws IOException
 {
 	HashMap<String, String> res = new HashMap<String, String>();
