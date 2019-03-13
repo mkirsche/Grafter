@@ -238,6 +238,7 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 	ArrayList<ArrayList<SortablePafAlignment>> res = new ArrayList<>();
 	
 	ArrayList<SortablePafAlignment> cur = new ArrayList<>();
+	HashSet<String> using = new HashSet<String>();
 	for(int i = 0 ; i<alignments.size(); i++)
 	{
 		
@@ -248,7 +249,7 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 		int type = -1;
 		boolean[] contigStartEnd = contigStartEnd(a);
 		boolean[] readStartEnd = readStartEnd(a);
-		if(alreadyJoined.contains(a.contigName))
+		if(alreadyJoined.contains(a.contigName) || using.contains(a.contigName))
 		{
 			type = 2;
 		}
@@ -261,6 +262,7 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 			// Middle of read aligning to one end of contig -> invalid
 			type = 2;
 			cur.clear();
+			using.clear();
 		}
 		else if(cur.size() >= 2 && cur.get(cur.size() - 2).readEnd > a.readStart)
 		{
@@ -274,6 +276,7 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 		
 		if(type == 0)
 		{
+			using.add(a.contigName);
 			cur.add(a);
 		}
 		else if(type == 1)
@@ -289,6 +292,7 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 				}
 			}
 			cur.clear();
+			using.clear();
 		}
 		else if(type == 2)
 		{
