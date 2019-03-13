@@ -66,6 +66,7 @@ public static void main(String[] args) throws IOException
 	 */
 	HashMap<String, ArrayList<ArrayList<SortablePafAlignment>>> uniqueMap = new HashMap<>();
 	HashSet<String> contigNames = new HashSet<String>();
+	HashSet<String> readNames = new HashSet<String>();
 	for(String s : alignmentsPerRead.keySet())
 	{
 		if(alignmentsPerRead.get(s).size() == 1)
@@ -75,7 +76,10 @@ public static void main(String[] args) throws IOException
 		
 		ArrayList<ArrayList<SortablePafAlignment>> uniques = getUniqueMatches(alignmentsPerRead.get(s));
 		
-		System.err.print("Chain sizes for " + s+":");
+		if(uniques.size() > 0)
+		{
+			System.err.print("Chain sizes for " + s+":");
+		}
 		for(ArrayList<SortablePafAlignment> l : uniques)
 		{
 			for(SortablePafAlignment spa : l)
@@ -89,6 +93,7 @@ public static void main(String[] args) throws IOException
 		if(uniques.size() > 0)
 		{
 			uniqueMap.put(s, uniques);
+			readNames.add(s);
 		}
 	}
 	
@@ -99,7 +104,7 @@ public static void main(String[] args) throws IOException
 	HashMap<String, String> readMap, contigMap;
 	if((readMap = Scaffold.readMap(readMapFile)).size() == 0)
 	{
-		readMap = Scaffold.getFastqMap(readFn, (HashSet<String>) uniqueMap.keySet());
+		readMap = Scaffold.getFastqMap(readFn, readNames);
 		Scaffold.writeMap(readMapFile, readMap);
 	}
 	if((contigMap = Scaffold.readMap(contigMapFile)).size() == 0)
