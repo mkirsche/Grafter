@@ -131,7 +131,7 @@ public static void main(String[] args) throws IOException
 			String scaffoldName = "";
 			for(int i = 0; i<als.size(); i++)
 			{
-				scaffoldName += als.get(i);
+				scaffoldName += als.get(i).contigName;
 				if(i < als.size() - 1) scaffoldName += "&";
 			}
 			numMerged += als.size() - 1;
