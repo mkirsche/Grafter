@@ -79,16 +79,16 @@ public static void main(String[] args) throws IOException
 		if(uniques.size() > 0)
 		{
 			System.err.print("Chain sizes for " + s+":");
-		}
-		for(ArrayList<SortablePafAlignment> l : uniques)
-		{
-			for(SortablePafAlignment spa : l)
+			for(ArrayList<SortablePafAlignment> l : uniques)
 			{
-				contigNames.add(spa.contigName);
+				for(SortablePafAlignment spa : l)
+				{
+					contigNames.add(spa.contigName);
+				}
+				System.err.print(" "+l.size());
 			}
-			System.err.print(" "+l.size());
+			System.err.println();
 		}
-		System.err.println();
 		
 		if(uniques.size() > 0)
 		{
