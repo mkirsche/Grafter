@@ -263,6 +263,8 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 	
 	ArrayList<SortablePafAlignment> cur = new ArrayList<>();
 	HashSet<String> using = new HashSet<String>();
+	boolean found = false;
+	ArrayList<Integer> types = new ArrayList<Integer>(), vals = new ArrayList<Integer>();
 	for(int i = 0 ; i<alignments.size(); i++)
 	{
 		
@@ -270,8 +272,9 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 		//System.out.println(a.contigName);
 		if(a.contigName.contains("tig00087118"))
 		{
+			found = true;
 			System.out.println("go");
-			for(SortablePafAlignment aa : alignments) System.out.println(aa.contigName+" "+aa.readStart+" "+aa.readEnd);
+			for(SortablePafAlignment aa : alignments) System.out.println(aa.contigName+" "+aa.readStart+" "+aa.readEnd+" "+aa.readLength);
 		}
 		
 		// Types: 0 is addition to alignment chain, 1 is invalid (overlapping last two alignments),
@@ -281,14 +284,17 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 		boolean[] readStartEnd = readStartEnd(a);
 		if(alreadyJoined.contains(a.contigName) || using.contains(a.contigName))
 		{
+			vals.add(0);
 			type = 2;
 		}
 		else if(!contigStartEnd[0] && !contigStartEnd[1])
 		{
+			vals.add(1);
 			type = 2;
 		}
-		else if((!contigStartEnd[1] || !contigStartEnd[0]) && ((!readStartEnd[0] && !readStartEnd[1]) || i > 0))
+		else if((!contigStartEnd[1] || !contigStartEnd[0]) && (!readStartEnd[0] && !readStartEnd[1]))
 		{
+			vals.add(2);
 			// Middle of read aligning to one end of contig -> invalid
 			type = 2;
 			cur.clear();
@@ -296,13 +302,21 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 		}
 		else if(cur.size() >= 2 && cur.get(cur.size() - 2).readEnd > a.readStart)
 		{
+			vals.add(3);
 			type = 1;
 		}
 		else if(cur.size() >= 1 && cur.get(cur.size()-1).readEnd >= a.readEnd)
 		{
+			vals.add(4);
 			type = 2;
 		}
-		else type = 0;
+		else
+		{
+			vals.add(5);
+			type = 0;
+		}
+		
+		types.add(type);
 		
 		if(type == 0)
 		{
@@ -330,6 +344,12 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 		}
 	}
 	
+	if(found)
+	{
+		System.out.println("cs: " + cur.size());
+		System.out.println(types+" "+vals);
+	}
+	
 	if(cur.size() >= 2)
 	{
 		res.add(cur);
@@ -338,6 +358,8 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 			alreadyJoined.add(spa.contigName);
 		}
 	}
+	
+	if(found) System.out.println(res.size());
 	
 	return res;
 }
