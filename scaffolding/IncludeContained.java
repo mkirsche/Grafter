@@ -67,6 +67,7 @@ public static void main(String[] args) throws IOException
 	HashMap<String, ArrayList<ArrayList<SortablePafAlignment>>> uniqueMap = new HashMap<>();
 	HashSet<String> contigNames = new HashSet<String>();
 	HashSet<String> readNames = new HashSet<String>();
+	HashSet<String> alreadyJoined = new HashSet<String>();
 	for(String s : alignmentsPerRead.keySet())
 	{
 		if(alignmentsPerRead.get(s).size() == 1)
@@ -74,7 +75,7 @@ public static void main(String[] args) throws IOException
 			continue;
 		}
 		
-		ArrayList<ArrayList<SortablePafAlignment>> uniques = getUniqueMatches(alignmentsPerRead.get(s));
+		ArrayList<ArrayList<SortablePafAlignment>> uniques = getUniqueMatches(alignmentsPerRead.get(s), alreadyJoined);
 		
 		if(uniques.size() > 0)
 		{
@@ -231,7 +232,7 @@ static boolean[] readStartEnd(FindUsefulScaffoldingAlignments.PafAlignment pa)
 }
 
 @SuppressWarnings("unchecked")
-static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<SortablePafAlignment> alignments)
+static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<SortablePafAlignment> alignments, HashSet<String> alreadyJoined)
 {
 	Collections.sort(alignments);
 	ArrayList<ArrayList<SortablePafAlignment>> res = new ArrayList<>();
@@ -247,7 +248,11 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 		int type = -1;
 		boolean[] contigStartEnd = contigStartEnd(a);
 		boolean[] readStartEnd = readStartEnd(a);
-		if(!contigStartEnd[0] && !contigStartEnd[1])
+		if(alreadyJoined.contains(a.contigName))
+		{
+			type = 2;
+		}
+		else if(!contigStartEnd[0] && !contigStartEnd[1])
 		{
 			type = 2;
 		}
@@ -278,6 +283,10 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 			if(cur.size() >= 2)
 			{
 				res.add((ArrayList<SortablePafAlignment>) cur.clone());
+				for(SortablePafAlignment spa : cur)
+				{
+					alreadyJoined.add(spa.contigName);
+				}
 			}
 			cur.clear();
 		}
@@ -290,6 +299,10 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 	if(cur.size() >= 2)
 	{
 		res.add(cur);
+		for(SortablePafAlignment spa : cur)
+		{
+			alreadyJoined.add(spa.contigName);
+		}
 	}
 	
 	return res;
