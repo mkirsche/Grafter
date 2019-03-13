@@ -79,16 +79,16 @@ public static void main(String[] args) throws IOException
 		
 		if(uniques.size() > 0)
 		{
-			System.err.print("Chain sizes for " + s+":");
+			//System.err.print("Chain sizes for " + s+":");
 			for(ArrayList<SortablePafAlignment> l : uniques)
 			{
 				for(SortablePafAlignment spa : l)
 				{
 					contigNames.add(spa.contigName);
 				}
-				System.err.print(" "+l.size());
+				//System.err.print(" "+l.size());
 			}
-			System.err.println();
+			//System.err.println();
 		}
 		
 		if(uniques.size() > 0)
@@ -231,10 +231,34 @@ static boolean[] readStartEnd(FindUsefulScaffoldingAlignments.PafAlignment pa)
 	return new boolean[] {pa.readStart < maxHanging, pa.readEnd + maxHanging >= pa.readLength};
 }
 
+static ArrayList<SortablePafAlignment> compress(ArrayList<SortablePafAlignment> alignments)
+{
+	ArrayList<SortablePafAlignment> res = new ArrayList<SortablePafAlignment>();
+	int n = alignments.size();
+	SortablePafAlignment last = alignments.get(0);
+	for(int i = 1; i<n; i++)
+	{
+		SortablePafAlignment cur = alignments.get(i);
+		if(cur.contigName.equals(last.contigName))
+		{
+			last.contigEnd = cur.contigEnd;
+			last.readEnd = cur.readEnd;
+		}
+		else
+		{
+			res.add(last);
+			last = cur;
+		}
+	}
+	res.add(last);
+	return res;
+}
+
 @SuppressWarnings("unchecked")
 static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<SortablePafAlignment> alignments, HashSet<String> alreadyJoined)
 {
 	Collections.sort(alignments);
+	alignments = compress(alignments);
 	ArrayList<ArrayList<SortablePafAlignment>> res = new ArrayList<>();
 	
 	ArrayList<SortablePafAlignment> cur = new ArrayList<>();
@@ -243,6 +267,12 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 	{
 		
 		SortablePafAlignment a = alignments.get(i);
+		//System.out.println(a.contigName);
+		if(a.contigName.contains("tig00087118"))
+		{
+			System.out.println("go");
+			for(SortablePafAlignment aa : alignments) System.out.println(aa.contigName+" "+aa.readStart+" "+aa.readEnd);
+		}
 		
 		// Types: 0 is addition to alignment chain, 1 is invalid (overlapping last two alignments),
 		// 2 is contained/not contig end so ignore this alignment
