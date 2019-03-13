@@ -104,11 +104,13 @@ public static void main(String[] args) throws IOException
 	HashMap<String, String> readMap, contigMap;
 	if((readMap = Scaffold.readMap(readMapFile)).size() == 0)
 	{
+		System.err.println("Filtering reads");
 		readMap = Scaffold.getFastqMap(readFn, readNames);
 		Scaffold.writeMap(readMapFile, readMap);
 	}
 	if((contigMap = Scaffold.readMap(contigMapFile)).size() == 0)
 	{
+		System.err.println("Filtering contigs");
 		contigMap = Scaffold.getFastaMap(fastaFn, contigNames);
 		Scaffold.writeMap(contigMapFile, contigMap);
 	}
@@ -116,6 +118,7 @@ public static void main(String[] args) throws IOException
 	/*
 	 * Perform string merging
 	 */
+	System.err.println("Joining contigs");
 	int numMerged = 0;
 	HashMap<String, String> mergedContigs = new HashMap<String, String>();
 	for(String readName : uniqueMap.keySet())
