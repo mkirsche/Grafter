@@ -10,10 +10,10 @@ public class IncludeContained {
 public static void main(String[] args) throws IOException
 {
 	String pafFn = "rel2_200kplus_ccs_mat.paf";
-	String fastaFn = "";
-	String readFn = "";
-	String readMapFile = "readmap_paternal.txt";
-	String contigMapFile = "contigmap_paternal.txt";
+	String fastaFn = "maternal_and_unknown.contigs.mmpoa.fa";
+	String readFn = "rel2_200kplus.fastq";
+	String readMapFile = "readmap_maternal.txt";
+	String contigMapFile = "contigmap_maternal.txt";
 	String outFn = "new_contigs.fa";
 	
 	if(args.length > 0 && args[0].equals("--server"))
@@ -122,6 +122,7 @@ public static void main(String[] args) throws IOException
 	System.err.println("Joining contigs");
 	int numMerged = 0;
 	HashMap<String, String> mergedContigs = new HashMap<String, String>();
+	HashMap<String, HashSet<String>> components = new HashMap<>();
 	for(String readName : uniqueMap.keySet())
 	{
 		String readSeq = readMap.get(readName);
@@ -137,6 +138,14 @@ public static void main(String[] args) throws IOException
 			}
 			numMerged += als.size() - 1;
 			mergedContigs.put(scaffoldName, seq);
+			if(!components.containsKey(scaffoldName))
+			{
+				components.put(scaffoldName, new HashSet<String>());
+			}
+			for(int i = 0; i<als.size(); i++)
+			{
+				components.get(scaffoldName).add(als.get(i).contigName);
+			}
 		}
 	}
 	
@@ -145,7 +154,9 @@ public static void main(String[] args) throws IOException
 	 */
 	for(String s : mergedContigs.keySet())
 	{
-		out.println(">" + s);
+		out.print(">" + s);
+		for(String sub : components.get(s)) out.print(" " + sub);
+		out.println();
 		out.println(mergedContigs.get(s));
 	}
 	System.err.println("Number of joins: " + numMerged);
@@ -347,12 +358,12 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 		
 		SortablePafAlignment a = alignments.get(i);
 		//System.out.println(a.contigName);
-		if(a.contigName.contains("tig00084613"))
-		{
-			found = true;
-			System.out.println("go");
-			for(SortablePafAlignment aa : alignments) System.out.println(aa.contigName+" "+aa.readStart+" "+aa.readEnd + "("+aa.contigStart+", " + aa.contigEnd+")");
-		}
+//		if(a.contigName.contains("tig00084613"))
+//		{
+//			found = true;
+//			System.out.println("go");
+//			for(SortablePafAlignment aa : alignments) System.out.println(aa.contigName+" "+aa.readStart+" "+aa.readEnd + "("+aa.contigStart+", " + aa.contigEnd+")");
+//		}
 		
 		// Types: 0 is addition to alignment chain, 1 is invalid (overlapping last two alignments),
 		// 2 is contained/not contig end so ignore this alignment
@@ -421,11 +432,11 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 		}
 	}
 	
-	if(found)
-	{
-		System.out.println("cs: " + cur.size());
-		System.out.println(types+" "+vals);
-	}
+//	if(found)
+//	{
+//		System.out.println("cs: " + cur.size());
+//		System.out.println(types+" "+vals);
+//	}
 	
 	if(cur.size() >= 2)
 	{

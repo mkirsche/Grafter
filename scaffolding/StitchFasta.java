@@ -26,9 +26,17 @@ public static void main(String[] args) throws IOException
 	while(true)
 	{
 		try {
-			String line = br.readLine();
-			String name = line.substring(1);
-			String[] subcontigs = name.split("&");
+			String[] line = br.readLine().split(" ");
+			String name = line[0].substring(1);
+			String[] subcontigs = new String[0];
+			if(line.length > 1)
+			{
+				subcontigs = line;
+			}
+			else
+			{
+				subcontigs = name.split("&");
+			}
 			for(String sc : subcontigs)
 			{
 				used.add(sc);
