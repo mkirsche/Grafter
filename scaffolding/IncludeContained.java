@@ -9,7 +9,7 @@ public class IncludeContained {
 @SuppressWarnings("resource")
 public static void main(String[] args) throws IOException
 {
-	String pafFn = "rel2_200kplus_ccs.paf";
+	String pafFn = "rel2_200kplus_ccs_mat.paf";
 	String fastaFn = "";
 	String readFn = "";
 	String readMapFile = "readmap_paternal.txt";
@@ -233,8 +233,84 @@ static boolean[] readStartEnd(FindUsefulScaffoldingAlignments.PafAlignment pa)
 
 static ArrayList<SortablePafAlignment> compress(ArrayList<SortablePafAlignment> alignments)
 {
-	ArrayList<SortablePafAlignment> res = new ArrayList<SortablePafAlignment>();
 	int n = alignments.size();
+
+	Comparator<SortablePafAlignment> byContigName = new Comparator<SortablePafAlignment>() {
+
+		@Override
+		public int compare(SortablePafAlignment a, SortablePafAlignment b) {
+			if(a.contigName.equals(b.contigName))
+			{
+				return a.compareTo(b);
+			}
+			return a.contigName.compareTo(b.contigName);
+		}
+	};
+	Collections.sort(alignments, byContigName);
+	ArrayList<SortablePafAlignment> filtered = new ArrayList<>();
+	for(int i = 0; i<n; i++)
+	{
+		int j = i+1;
+		while(j< n && alignments.get(i).contigName.equals(alignments.get(j).contigName))
+		{
+			j++;
+		}
+		// Now alignments[i:j) has all the alignments of this contig - combine or remove them
+		boolean[] rse = new boolean[2], cse = new boolean[2];
+		for(int k = i; k<j; k++)
+		{
+			SortablePafAlignment cur = alignments.get(k);
+			boolean[] crse = readStartEnd(cur);
+			boolean[] ccse = contigStartEnd(cur);
+			for(int q = 0; q<2; q++)
+			{
+				rse[q] |= crse[q];
+				cse[q] |= ccse[q];
+			}
+		}
+		// Have whether the alignment set covers the start/end of contig/read
+		if(!cse[0] && !cse[1])
+		{
+			/*
+			 * Middle portion of contig aligns somewhere on read but neither end of it
+			 * Only possible case is read contained in contig, making alignment useless
+			 * Throw out the alignment and update i
+			 */
+			i = j-1;
+			continue;
+		}
+		else if(!rse[0] && !rse[1])
+		{
+			/*
+			 * Neither end of the contig is involved, so it must be contained in the read
+			 * Filter out cases which don't reflect this
+			 */
+			if(!cse[0] || !cse[1])
+			{
+				i = j - 1;
+				continue;
+			}
+		}
+		else
+		{
+			SortablePafAlignment total = alignments.get(i).copy();
+			for(int k = i+1; k<j; k++)
+			{
+				SortablePafAlignment cur = alignments.get(k);
+				total.contigStart = Math.min(total.contigStart, cur.contigStart);
+				total.contigEnd = Math.max(total.contigEnd, cur.contigEnd);
+				total.readStart = Math.min(total.readStart, cur.readStart);
+				total.readEnd = Math.max(total.readEnd, cur.readEnd);
+			}
+			filtered.add(total);
+		}
+	}
+	
+	Collections.sort(filtered);
+	return filtered;
+	/*
+	Collections.sort(alignments);
+	ArrayList<SortablePafAlignment> res = new ArrayList<SortablePafAlignment>();
 	SortablePafAlignment last = alignments.get(0);
 	for(int i = 1; i<n; i++)
 	{
@@ -252,6 +328,7 @@ static ArrayList<SortablePafAlignment> compress(ArrayList<SortablePafAlignment> 
 	}
 	res.add(last);
 	return res;
+	*/
 }
 
 @SuppressWarnings("unchecked")
@@ -270,11 +347,11 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 		
 		SortablePafAlignment a = alignments.get(i);
 		//System.out.println(a.contigName);
-		if(a.contigName.contains("tig00087118"))
+		if(a.contigName.contains("tig00084613"))
 		{
 			found = true;
 			System.out.println("go");
-			for(SortablePafAlignment aa : alignments) System.out.println(aa.contigName+" "+aa.readStart+" "+aa.readEnd+" "+aa.readLength);
+			for(SortablePafAlignment aa : alignments) System.out.println(aa.contigName+" "+aa.readStart+" "+aa.readEnd + "("+aa.contigStart+", " + aa.contigEnd+")");
 		}
 		
 		// Types: 0 is addition to alignment chain, 1 is invalid (overlapping last two alignments),
@@ -376,6 +453,10 @@ static class SortablePafAlignment extends FindUsefulScaffoldingAlignments.PafAli
 			return readStart - o.readStart;
 		}
 		return readEnd - o.readEnd;
+	}
+	SortablePafAlignment copy()
+	{
+		return new SortablePafAlignment(line);
 	}
 	
 }
