@@ -13,3 +13,5 @@ rm /scratch/groups/mschatz1/mkirsche/ultralong/*_usefulmap2.paf
 java -cp ~/hashing/CCS/assembly_eval/ AssemblyStats /scratch/groups/mschatz1/mkirsche/ultralong/ccs/maternal_and_unknown.contigs.mmpoa.scaffoldsgraph.fa | tee maternal_afterstatsgraph.txt;
 #./delta.sh /scratch/groups/mschatz1/mkirsche/ultralong/ccs/maternal_and_unknown.contigs.mmpoa.scaffolds4.fa /scratch/groups/mschatz1/mkirsche/ultralong/ccs/after_maternal2;
 
+./delta.sh /scratch/groups/mschatz1/mkirsche/ultralong/ccs/maternal_and_unknown.contigs.mmpoa.scaffoldsgraph.fa /scratch/groups/mschatz1/mkirsche/ultralong/ccs/after_maternalgraph;
+
