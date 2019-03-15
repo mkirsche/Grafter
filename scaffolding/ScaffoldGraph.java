@@ -6,7 +6,7 @@ import java.util.*;
  * Map contig name -> contig name -> list of alignments
  */
 public class ScaffoldGraph {
-	HashMap<String, HashMap<String, ArrayList<Alignment>>> adj;
+	HashMap<String,ArrayList<Alignment>> adj;
 	ScaffoldGraph()
 	{
 		adj =  new HashMap<>();
@@ -15,25 +15,22 @@ public class ScaffoldGraph {
 	{
 		if(!adj.containsKey(from))
 		{
-			adj.put(from, new HashMap<String, ArrayList<Alignment>>());
+			adj.put(from, new ArrayList<Alignment>());
 		}
-		HashMap<String, ArrayList<Alignment>> fromEdgeList = adj.get(from);
-		if(!fromEdgeList.containsKey(to))
-		{
-			fromEdgeList.put(to, new ArrayList<Alignment>());
-		}
-		fromEdgeList.get(to).add(new Alignment(readName, fromEnd, toStart, fromPrefix, toPrefix));
+		adj.get(from).add(new Alignment(to, readName, fromEnd, toStart, fromPrefix, toPrefix));
 	}
 
 static class Alignment
 {
+	String to;
 	String read;
 	int myReadEnd;
 	int theirReadStart;
 	boolean myContigPrefix;
 	boolean theirContigPrefix;
-	Alignment(String rr, int mre, int trs, boolean mcp, boolean tcp)
+	Alignment(String tt, String rr, int mre, int trs, boolean mcp, boolean tcp)
 	{
+		to = tt;
 		read = rr;
 		myReadEnd = mre;
 		theirReadStart = trs;

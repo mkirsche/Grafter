@@ -79,16 +79,13 @@ public static void main(String[] args) throws IOException
 		
 		if(uniques.size() > 0)
 		{
-			//System.err.print("Chain sizes for " + s+":");
 			for(ArrayList<SortablePafAlignment> l : uniques)
 			{
 				for(SortablePafAlignment spa : l)
 				{
 					contigNames.add(spa.contigName);
 				}
-				//System.err.print(" "+l.size());
 			}
-			//System.err.println();
 		}
 		
 		if(uniques.size() > 0)
@@ -119,25 +116,27 @@ public static void main(String[] args) throws IOException
 	/*
 	 * Perform string merging
 	 */
+	ScaffoldGraph sg = new ScaffoldGraph();
 	System.err.println("Joining contigs");
 	int numMerged = 0;
 	HashMap<String, String> mergedContigs = new HashMap<String, String>();
 	HashMap<String, HashSet<String>> components = new HashMap<>();
 	for(String readName : uniqueMap.keySet())
 	{
-		String readSeq = readMap.get(readName);
+		//String readSeq = readMap.get(readName);
 		ArrayList<ArrayList<SortablePafAlignment>> allAlignments = uniqueMap.get(readName);
 		for(ArrayList<SortablePafAlignment> als : allAlignments)
 		{
-			String seq = merge(als, readSeq, contigMap);
+			addEdges(sg, als);
+			//String seq = merge(als, readSeq, contigMap);
 			String scaffoldName = "";
 			for(int i = 0; i<als.size(); i++)
 			{
 				scaffoldName += als.get(i).contigName;
 				if(i < als.size() - 1) scaffoldName += "&";
 			}
-			numMerged += als.size() - 1;
-			mergedContigs.put(scaffoldName, seq);
+			//numMerged += als.size() - 1;
+			//mergedContigs.put(scaffoldName, seq);
 			if(!components.containsKey(scaffoldName))
 			{
 				components.put(scaffoldName, new HashSet<String>());
@@ -149,51 +148,257 @@ public static void main(String[] args) throws IOException
 		}
 	}
 	
+	// Map from first contig in a scaffold to info about the scaffold
+	HashMap<String, ArrayDeque<String>> scaffoldContigs = new HashMap<>();
+	HashMap<String, String> lastToFirst = new HashMap<String, String>();
+	HashMap<String, ArrayDeque<ScaffoldGraph.Alignment>> scaffoldEdges = new HashMap<>();
+	HashSet<String> usedContigs = new HashSet<String>();
+	
+	for(String s : sg.adj.keySet())
+	{
+		// Ignore if already at start or middle of a scaffold
+		if(usedContigs.contains(s) && !lastToFirst.containsKey(s))
+		{
+			continue;
+		}
+		ScaffoldGraph.Alignment best = consensus(s, sg.adj.get(s), usedContigs, scaffoldEdges);
+		if(best == null) continue;
+		String to = best.to;
+		
+		// TODO update 4 variables above
+		if(!usedContigs.contains(to))
+		{
+			if(usedContigs.contains(s))
+			{
+				// s is the last contig in some scaffold
+				String firstContigInScaffold = lastToFirst.get(s);
+				ArrayDeque<String> allContigsInScaffold = scaffoldContigs.get(firstContigInScaffold);
+				ArrayDeque<ScaffoldGraph.Alignment> allEdgesInScaffold = scaffoldEdges.get(firstContigInScaffold);
+				allContigsInScaffold.addLast(to);
+				allEdgesInScaffold.add(best);
+				
+				usedContigs.add(to);
+				lastToFirst.remove(s);
+				lastToFirst.put(to, firstContigInScaffold);
+			}
+			else
+			{
+				// s hasn't been connected to anything yet
+				scaffoldEdges.put(s, new ArrayDeque<ScaffoldGraph.Alignment>());
+				scaffoldContigs.put(s, new ArrayDeque<String>());
+				scaffoldContigs.get(s).addLast(s);
+				scaffoldContigs.get(s).addLast(to);
+				scaffoldEdges.get(s).addLast(best);
+				
+				usedContigs.add(s);
+				usedContigs.add(to);
+				lastToFirst.put(to, s);
+			}
+		}
+		
+		else
+		{
+			// In calculating best, already made sure it's the first in its scaffold
+			// Move entire scaffold with to to the end of the scaffold with s
+			String lastContigInScaffold = scaffoldContigs.get(to).peekLast();
+			if(usedContigs.contains(s))
+			{
+				String firstContigInScaffold = lastToFirst.get(s);
+				lastToFirst.remove(s);
+				lastToFirst.put(lastContigInScaffold, firstContigInScaffold);
+				scaffoldEdges.get(firstContigInScaffold).addLast(best);
+				while(!scaffoldEdges.get(to).isEmpty())
+				{
+					scaffoldEdges.get(firstContigInScaffold).addLast(scaffoldEdges.get(to).pollFirst());
+				}
+				scaffoldEdges.remove(to);
+				
+				while(!scaffoldContigs.get(to).isEmpty())
+				{
+					scaffoldContigs.get(firstContigInScaffold).addLast(scaffoldContigs.get(to).pollFirst());
+				}
+				scaffoldContigs.remove(to);
+			}
+			else
+			{
+				// s is on its own
+				scaffoldEdges.put(s, scaffoldEdges.get(to));
+				scaffoldEdges.get(s).addFirst(best);
+				scaffoldEdges.remove(to);
+				
+				scaffoldContigs.put(s, scaffoldContigs.get(to));
+				scaffoldContigs.get(s).addFirst(s);
+				scaffoldContigs.remove(to);
+				
+				usedContigs.add(s);
+				
+				lastToFirst.put(lastContigInScaffold, s);
+			}
+		}
+		
+		numMerged++;
+	}
+	
 	/*
 	 * Output all merged contigs
 	 */
-	for(String s : mergedContigs.keySet())
+/*	for(String s : mergedContigs.keySet())
 	{
 		out.print(">" + s);
 		for(String sub : components.get(s)) out.print(" " + sub);
 		out.println();
 		out.println(mergedContigs.get(s));
 	}
+	*/
+	for(String s : scaffoldContigs.keySet())
+	{
+		out.println(getHeaderLine(scaffoldContigs.get(s)));
+		
+		String seq = merge(scaffoldContigs.get(s), scaffoldEdges.get(s), readMap, contigMap);
+		
+		out.println(seq);
+	}
 	System.err.println("Number of joins: " + numMerged);
 	
 }
 
-static String merge(ArrayList<SortablePafAlignment> als, String readSeq, HashMap<String, String> relevantContigs)
+static String getHeaderLine(ArrayDeque<String> contigs)
+{
+	StringBuilder res = new StringBuilder("");
+	for(String s : contigs)
+	{
+		if(res.length() > 0) res.append("&");
+		else res.append(">");
+		res.append(s);
+	}
+	
+	for(String s : contigs) res.append(" " + s);
+	
+	return res.toString();
+}
+
+static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignment> als, HashMap<String, String> readMap, HashMap<String, String> relevantContigs)
 {
 	StringBuilder res = new StringBuilder();
+	boolean first = true;
+	for(ScaffoldGraph.Alignment spa : als)
+	{
+		if(first)
+		{
+			first = false;
+			String curSeq = relevantContigs.get(contigs.peekFirst());
+			if(spa.myContigPrefix) curSeq = Scaffold.reverseComplement(curSeq);
+			res.append(curSeq);
+		}
+		int overlap = 0;
+		if(spa.myReadEnd < spa.theirReadStart)
+		{
+			String readSeq = readMap.get(spa.read);
+			res.append(readSeq.substring(spa.myReadEnd, spa.theirReadStart));
+		}
+		else
+		{
+			overlap = spa.myReadEnd - spa.theirReadStart;
+		}
+		
+		String curSeq = relevantContigs.get(spa.to);
+		
+		if(!spa.theirContigPrefix)
+		{
+			curSeq = Scaffold.reverseComplement(curSeq);
+		}
+		res.append(curSeq.substring(overlap));
+	}
+	return res.toString();
+}
+
+/*
+ * Gets the best alignment of a contig to follow a given contig
+ */
+static ScaffoldGraph.Alignment consensus(String from, ArrayList<ScaffoldGraph.Alignment> als, HashSet<String> usedContigs, HashMap<String, ArrayDeque<ScaffoldGraph.Alignment>> scaffoldEdges)
+{
+	HashMap<String, ArrayList<ScaffoldGraph.Alignment>> prefEdges = new HashMap<>();
+	HashMap<String, ArrayList<ScaffoldGraph.Alignment>> suffEdges = new HashMap<>();
+	for(ScaffoldGraph.Alignment a : als)
+	{
+		if(a.myContigPrefix)
+		{
+			if(!prefEdges.containsKey(a.to)) prefEdges.put(a.to, new ArrayList<ScaffoldGraph.Alignment>());
+			prefEdges.get(a.to).add(a);
+		}
+		else
+		{
+			if(!suffEdges.containsKey(a.to)) suffEdges.put(a.to, new ArrayList<ScaffoldGraph.Alignment>());
+			suffEdges.get(a.to).add(a);
+		}
+	}
+	ArrayList<ScaffoldGraph.Alignment> best = null;
+	for(String to : prefEdges.keySet())
+	{
+		if(usedContigs.contains(to) && !scaffoldEdges.containsKey(to)) continue;
+		if(scaffoldEdges.containsKey(to) && scaffoldEdges.get(to).peekLast().to.equals(from)) continue;
+		ArrayList<ScaffoldGraph.Alignment> al = prefEdges.get(to);
+		ArrayList<ScaffoldGraph.Alignment> valid = new ArrayList<>();
+		for(ScaffoldGraph.Alignment a : al)
+		{
+			if(scaffoldEdges.containsKey(to) && scaffoldEdges.get(to).peekFirst().myContigPrefix == a.theirContigPrefix)
+			{
+				continue;
+			}
+			valid.add(a);
+		}
+		
+		if(best == null || valid.size() > best.size())
+		{
+			best = valid;
+		}
+	}
+	for(String to : suffEdges.keySet())
+	{
+		if(usedContigs.contains(to) && !scaffoldEdges.containsKey(to)) continue;
+		if(scaffoldEdges.containsKey(to) && scaffoldEdges.get(to).peekLast().to.equals(from)) continue;
+		ArrayList<ScaffoldGraph.Alignment> valid = new ArrayList<>();
+		ArrayList<ScaffoldGraph.Alignment> al = suffEdges.get(to);
+		for(ScaffoldGraph.Alignment a : al)
+		{
+			if(scaffoldEdges.containsKey(to) && scaffoldEdges.get(to).peekFirst().myContigPrefix == a.theirContigPrefix)
+			{
+				continue;
+			}
+			valid.add(a);
+		}
+		if(best == null || valid.size() > best.size())
+		{
+			best = valid;
+		}
+	}
+	
+	if(best == null || best.size() == 0) return null;
+	
+	ScaffoldGraph.Alignment res = best.get(0);
+	
+	return res;
+}
+
+static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als)
+{
 	SortablePafAlignment last = null;
+	boolean lastReversed = false;
 	for(int i = 0; i<als.size(); i++)
 	{
 		SortablePafAlignment spa = als.get(i);
-		int overlap = 0;
-		if(last != null)
-		{
-			if(last.readEnd < spa.readStart)
-			{
-				res.append(readSeq.substring(last.readEnd, spa.readStart));
-			}
-			else
-			{
-				overlap = last.readEnd - spa.readStart;
-			}
-		}
 		
-		String curSeq = relevantContigs.get(spa.contigName);
+		boolean curReversed = false;
 		
 		boolean[] cse = contigStartEnd(spa);
-		boolean[] rse =readStartEnd(spa);
+		boolean[] rse = readStartEnd(spa);
 		
 		if(cse[0] && cse[1])
 		{
 			// Entire contig aligns - have to look at strand in alignment
 			if(spa.strand == '-')
 			{
-				curSeq = Scaffold.reverseComplement(curSeq);
+				curReversed = true;
 			}
 		}
 		else if(cse[0])
@@ -203,12 +408,12 @@ static String merge(ArrayList<SortablePafAlignment> als, String readSeq, HashMap
 			{
 				if(spa.strand == '-')
 				{
-					curSeq = Scaffold.reverseComplement(curSeq);
+					curReversed = true;
 				}
 			}
 			else if(rse[0])
 			{
-				curSeq = Scaffold.reverseComplement(curSeq);
+				curReversed = true;
 			}
 		}
 		else
@@ -218,18 +423,26 @@ static String merge(ArrayList<SortablePafAlignment> als, String readSeq, HashMap
 			{
 				if(spa.strand == '-')
 				{
-					curSeq = Scaffold.reverseComplement(curSeq);
+					curReversed = true;
 				}
 			}
 			else if(rse[1])
 			{
-				curSeq = Scaffold.reverseComplement(curSeq);
+				curReversed = true;
 			}
 		}
 		
-		res.append(curSeq.substring(overlap));
+		if(last != null)
+		{
+			System.out.println("Edge: " + last.contigName+" "+spa.contigName);
+			int overlap = last.readEnd - spa.readStart;
+			if(overlap <= spa.contigLength && overlap <= last.contigLength)
+				sg.addEdge(last.contigName, spa.contigName, last.readName, last.readEnd, spa.readStart, lastReversed, !curReversed);
+		}
+		
+		last = spa;
+		lastReversed = curReversed;
 	}
-	return res.toString();
 }
 
 static boolean[] contigStartEnd(FindUsefulScaffoldingAlignments.PafAlignment pa)
@@ -268,9 +481,16 @@ static ArrayList<SortablePafAlignment> compress(ArrayList<SortablePafAlignment> 
 		}
 		// Now alignments[i:j) has all the alignments of this contig - combine or remove them
 		boolean[] rse = new boolean[2], cse = new boolean[2];
+		boolean okay = true;
+		int lrs = alignments.get(i).readStart, lcs = alignments.get(i).contigStart;
 		for(int k = i; k<j; k++)
 		{
 			SortablePafAlignment cur = alignments.get(k);
+			int contigDist = cur.contigStart - lcs;
+			int readDist = cur.readStart - lrs;
+			if(readDist > 3 * contigDist || contigDist > 3 * readDist) okay = false;
+			lcs = cur.contigStart;
+			lrs = cur.readStart;
 			boolean[] crse = readStartEnd(cur);
 			boolean[] ccse = contigStartEnd(cur);
 			for(int q = 0; q<2; q++)
@@ -278,6 +498,11 @@ static ArrayList<SortablePafAlignment> compress(ArrayList<SortablePafAlignment> 
 				rse[q] |= crse[q];
 				cse[q] |= ccse[q];
 			}
+		}
+		if(!okay)
+		{
+			i = j - 1;
+			continue;
 		}
 		// Have whether the alignment set covers the start/end of contig/read
 		if(!cse[0] && !cse[1])
@@ -313,33 +538,13 @@ static ArrayList<SortablePafAlignment> compress(ArrayList<SortablePafAlignment> 
 				total.readStart = Math.min(total.readStart, cur.readStart);
 				total.readEnd = Math.max(total.readEnd, cur.readEnd);
 			}
+			i = j-1;
 			filtered.add(total);
 		}
 	}
 	
 	Collections.sort(filtered);
 	return filtered;
-	/*
-	Collections.sort(alignments);
-	ArrayList<SortablePafAlignment> res = new ArrayList<SortablePafAlignment>();
-	SortablePafAlignment last = alignments.get(0);
-	for(int i = 1; i<n; i++)
-	{
-		SortablePafAlignment cur = alignments.get(i);
-		if(cur.contigName.equals(last.contigName))
-		{
-			last.contigEnd = cur.contigEnd;
-			last.readEnd = cur.readEnd;
-		}
-		else
-		{
-			res.add(last);
-			last = cur;
-		}
-	}
-	res.add(last);
-	return res;
-	*/
 }
 
 @SuppressWarnings("unchecked")
@@ -352,30 +557,22 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 	ArrayList<SortablePafAlignment> cur = new ArrayList<>();
 	HashSet<String> using = new HashSet<String>();
 	boolean found = false;
-	ArrayList<Integer> types = new ArrayList<Integer>(), vals = new ArrayList<Integer>();
 	for(int i = 0 ; i<alignments.size(); i++)
 	{
 		
 		SortablePafAlignment a = alignments.get(i);
-		//System.out.println(a.contigName);
-//		if(a.contigName.contains("tig00084613"))
-//		{
-//			found = true;
-//			System.out.println("go");
-//			for(SortablePafAlignment aa : alignments) System.out.println(aa.contigName+" "+aa.readStart+" "+aa.readEnd + "("+aa.contigStart+", " + aa.contigEnd+")");
-//		}
 		
 		// Types: 0 is addition to alignment chain, 1 is invalid (overlapping last two alignments),
 		// 2 is contained/not contig end so ignore this alignment
 		int type = -1;
 		boolean[] contigStartEnd = contigStartEnd(a);
 		boolean[] readStartEnd = readStartEnd(a);
-		if(alreadyJoined.contains(a.contigName) || using.contains(a.contigName))
+		/*if(alreadyJoined.contains(a.contigName) || using.contains(a.contigName))
 		{
 			vals.add(0);
 			type = 2;
-		}
-		else if(!contigStartEnd[0] && !contigStartEnd[1])
+		}*/
+		/*if(!contigStartEnd[0] && !contigStartEnd[1])
 		{
 			vals.add(1);
 			type = 2;
@@ -387,24 +584,19 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 			type = 2;
 			cur.clear();
 			using.clear();
-		}
-		else if(cur.size() >= 2 && cur.get(cur.size() - 2).readEnd > a.readStart)
+		}*/
+		if(cur.size() >= 2 && cur.get(cur.size() - 2).readEnd > a.readStart)
 		{
-			vals.add(3);
 			type = 1;
 		}
 		else if(cur.size() >= 1 && cur.get(cur.size()-1).readEnd >= a.readEnd)
 		{
-			vals.add(4);
 			type = 2;
 		}
 		else
 		{
-			vals.add(5);
 			type = 0;
 		}
-		
-		types.add(type);
 		
 		if(type == 0)
 		{
