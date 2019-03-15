@@ -120,7 +120,7 @@ public static void main(String[] args) throws IOException
 	}
 	
 	/*
-	 * Perform string merging
+	 * Add edges to the scaffold graph based on the chains of alignments
 	 */
 	ScaffoldGraph sg = new ScaffoldGraph();
 	System.err.println("Joining contigs");
@@ -140,6 +140,9 @@ public static void main(String[] args) throws IOException
 	HashMap<String, ArrayDeque<ScaffoldGraph.Alignment>> scaffoldEdges = new HashMap<>();
 	HashSet<String> usedContigs = new HashSet<String>();
 	
+	/*
+	 * Create scaffolds by linking together contigs based on their best edges
+	 */
 	for(String s : sg.adj.keySet())
 	{
 		for(int strand = 0; strand < 2; strand++)
@@ -149,11 +152,13 @@ public static void main(String[] args) throws IOException
 			{
 				continue;
 			}
+			
+			// Get the consensus edge of all edges going to the most highly supported contig
 			ScaffoldGraph.Alignment best = consensus(s, sg.adj.get(s)[strand], usedContigs, scaffoldEdges);
 			if(best == null) continue;
-			String to = best.to;
+			String t = best.to;
 			
-			if(!usedContigs.contains(to))
+			if(!usedContigs.contains(t))
 			{
 				if(usedContigs.contains(s))
 				{
@@ -161,12 +166,12 @@ public static void main(String[] args) throws IOException
 					String firstContigInScaffold = lastToFirst.get(s);
 					ArrayDeque<String> allContigsInScaffold = scaffoldContigs.get(firstContigInScaffold);
 					ArrayDeque<ScaffoldGraph.Alignment> allEdgesInScaffold = scaffoldEdges.get(firstContigInScaffold);
-					allContigsInScaffold.addLast(to);
+					allContigsInScaffold.addLast(t);
 					allEdgesInScaffold.add(best);
 					
-					usedContigs.add(to);
+					usedContigs.add(t);
 					lastToFirst.remove(s);
-					lastToFirst.put(to, firstContigInScaffold);
+					lastToFirst.put(t, firstContigInScaffold);
 				}
 				else
 				{
@@ -174,48 +179,49 @@ public static void main(String[] args) throws IOException
 					scaffoldEdges.put(s, new ArrayDeque<ScaffoldGraph.Alignment>());
 					scaffoldContigs.put(s, new ArrayDeque<String>());
 					scaffoldContigs.get(s).addLast(s);
-					scaffoldContigs.get(s).addLast(to);
+					scaffoldContigs.get(s).addLast(t);
 					scaffoldEdges.get(s).addLast(best);
 					
 					usedContigs.add(s);
-					usedContigs.add(to);
-					lastToFirst.put(to, s);
+					usedContigs.add(t);
+					lastToFirst.put(t, s);
 				}
 			}
 			
 			else
 			{
 				// In calculating best, already made sure it's the first in its scaffold
-				// Move entire scaffold with to to the end of the scaffold with s
-				String lastContigInScaffold = scaffoldContigs.get(to).peekLast();
+				// Move entire scaffold with t to the end of the scaffold with s
+				String lastContigInScaffold = scaffoldContigs.get(t).peekLast();
 				if(usedContigs.contains(s))
 				{
+					// s is the last contig in a scaffold, so append the scaffold with to after s
 					String firstContigInScaffold = lastToFirst.get(s);
 					lastToFirst.remove(s);
 					lastToFirst.put(lastContigInScaffold, firstContigInScaffold);
 					scaffoldEdges.get(firstContigInScaffold).addLast(best);
-					while(!scaffoldEdges.get(to).isEmpty())
+					while(!scaffoldEdges.get(t).isEmpty())
 					{
-						scaffoldEdges.get(firstContigInScaffold).addLast(scaffoldEdges.get(to).pollFirst());
+						scaffoldEdges.get(firstContigInScaffold).addLast(scaffoldEdges.get(t).pollFirst());
 					}
-					scaffoldEdges.remove(to);
+					scaffoldEdges.remove(t);
 					
-					while(!scaffoldContigs.get(to).isEmpty())
+					while(!scaffoldContigs.get(t).isEmpty())
 					{
-						scaffoldContigs.get(firstContigInScaffold).addLast(scaffoldContigs.get(to).pollFirst());
+						scaffoldContigs.get(firstContigInScaffold).addLast(scaffoldContigs.get(t).pollFirst());
 					}
-					scaffoldContigs.remove(to);
+					scaffoldContigs.remove(t);
 				}
 				else
 				{
-					// s is on its own
-					scaffoldEdges.put(s, scaffoldEdges.get(to));
+					// s is on its own, so add it to the beginning of the scaffold with t
+					scaffoldEdges.put(s, scaffoldEdges.get(t));
 					scaffoldEdges.get(s).addFirst(best);
-					scaffoldEdges.remove(to);
+					scaffoldEdges.remove(t);
 					
-					scaffoldContigs.put(s, scaffoldContigs.get(to));
+					scaffoldContigs.put(s, scaffoldContigs.get(t));
 					scaffoldContigs.get(s).addFirst(s);
-					scaffoldContigs.remove(to);
+					scaffoldContigs.remove(t);
 					
 					usedContigs.add(s);
 					
@@ -321,14 +327,10 @@ static ScaffoldGraph.Alignment consensus(String from, ArrayList<ScaffoldGraph.Al
 		if(a.myContigPrefix)
 		{
 			addInit(prefEdges, a.to, a);
-			//if(!prefEdges.containsKey(a.to)) prefEdges.put(a.to, new ArrayList<ScaffoldGraph.Alignment>());
-			//prefEdges.get(a.to).add(a);
 		}
 		else
 		{
 			addInit(suffEdges, a.to, a);
-			//if(!suffEdges.containsKey(a.to)) suffEdges.put(a.to, new ArrayList<ScaffoldGraph.Alignment>());
-			//suffEdges.get(a.to).add(a);
 		}
 	}
 	ArrayList<ScaffoldGraph.Alignment> best = null;
