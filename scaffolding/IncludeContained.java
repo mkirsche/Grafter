@@ -5,6 +5,10 @@ import java.util.*;
 import java.io.*;
 
 public class IncludeContained {
+	
+	// The number of reads required to support the joining of two contigs
+	static int minReadSupport = 1;
+	
 	static int maxHanging = 100;
 	static boolean fileMap = false;
 @SuppressWarnings("resource")
@@ -375,6 +379,8 @@ static ScaffoldGraph.Alignment consensus(String from, ArrayList<ScaffoldGraph.Al
 	}
 	
 	if(best == null || best.size() == 0) return null;
+	
+	if(best.size() < minReadSupport) return null;
 	
 	ScaffoldGraph.Alignment res = best.get(0);
 	
