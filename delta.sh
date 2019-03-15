@@ -4,5 +4,5 @@ genomepath=/home-3/mkirsche@jhu.edu/csdata/genome.fa
 assembly=$1
 outprefix=$2
 
-$minimappath -t 8 -x asm5 -c --cs $genomepath $assembly > $outprefix'.paf'
+$minimappath -t 32 -x asm5 -c --cs $genomepath $assembly > $outprefix'.paf'
 python paf2delta.py $outprefix'.paf'
