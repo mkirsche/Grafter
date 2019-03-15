@@ -493,33 +493,36 @@ static ArrayList<SortablePafAlignment> compress(ArrayList<SortablePafAlignment> 
 	ArrayList<SortablePafAlignment> filtered = new ArrayList<>();
 	for(int i = 0; i<n; i++)
 	{
+		// Find the end of the run of alignments of the current contig
 		int j = i+1;
 		while(j< n && alignments.get(i).contigName.equals(alignments.get(j).contigName))
 		{
 			j++;
 		}
+		
 		// Now alignments[i:j) has all the alignments of this contig - combine or remove them
 		boolean[] rse = new boolean[2], cse = new boolean[2];
-		boolean okay = true;
-		int lre = alignments.get(i).readStart, lce = alignments.get(i).contigStart;
+		boolean gapFree = true;
+		int lastReadEndPosition = alignments.get(i).readEnd;
+		int lastContigEndPosition = alignments.get(i).contigEnd;
 		for(int k = i; k<j; k++)
 		{
 			SortablePafAlignment cur = alignments.get(k);
 			
-			if(lce != -1 && cur.contigStart - lce > MAX_GAP)
+			// Check for a gap between this alignment and the last one in either the read or contig
+			if(cur.contigStart - lastContigEndPosition > MAX_GAP)
 			{
-				okay = false;
+				gapFree = false;
+				break;
+			}
+			if(cur.readStart - lastReadEndPosition > MAX_GAP)
+			{
+				gapFree = false;
 				break;
 			}
 			
-			if(lre != -1 && cur.readStart - lre > MAX_GAP)
-			{
-				okay = false;
-				break;
-			}
-			
-			lce = cur.contigEnd;
-			lre = cur.readEnd;
+			lastContigEndPosition = cur.contigEnd;
+			lastReadEndPosition = cur.readEnd;
 			boolean[] crse = readStartEnd(cur);
 			boolean[] ccse = contigStartEnd(cur);
 			for(int q = 0; q<2; q++)
@@ -528,12 +531,19 @@ static ArrayList<SortablePafAlignment> compress(ArrayList<SortablePafAlignment> 
 				cse[q] |= ccse[q];
 			}
 		}
-		if(!okay)
+		
+		/*
+		 * If the set of alignments had a large gap, ignore it 
+		 */
+		if(!gapFree)
 		{
 			i = j - 1;
 			continue;
 		}
-		// Have whether the alignment set covers the start/end of contig/read
+		
+		/*
+		 * We have whether the alignment set covers the start/end of contig/read, so check that it's valid
+		 */
 		if(!cse[0] && !cse[1])
 		{
 			/*
@@ -558,6 +568,9 @@ static ArrayList<SortablePafAlignment> compress(ArrayList<SortablePafAlignment> 
 		}
 		else
 		{
+			/*
+			 * Create of all of the alignments by taking earliest start and latest end
+			 */
 			SortablePafAlignment total = alignments.get(i).copy();
 			for(int k = i+1; k<j; k++)
 			{

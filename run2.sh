@@ -7,7 +7,7 @@ minimappath=/scratch/groups/mschatz1/mkirsche/github/minimap2/minimap2
 
 if [ ! -f $paffn ]; then
     echo "PAF file not found - generating it"
-    $minimappath -t 16 $contigsfn $readsfn  > $paffn
+    $minimappath -t 32 $contigsfn $readsfn  > $paffn
 fi
 
 BINDIR=`dirname $(readlink -f "$0")`
