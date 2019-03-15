@@ -67,11 +67,6 @@ public static void main(String[] args) throws IOException
 		String readName = cur.readName;
 		
 		addInit(alignmentsPerRead, readName, cur);
-		//if(!alignmentsPerRead.containsKey(readName))
-		//{
-		//	alignmentsPerRead.put(readName, new ArrayList<SortablePafAlignment>());
-		//}
-		//alignmentsPerRead.get(readName).add(cur);
 	}
 	
 	/*
@@ -147,86 +142,89 @@ public static void main(String[] args) throws IOException
 	
 	for(String s : sg.adj.keySet())
 	{
-		// Ignore if already at start or middle of a scaffold
-		if(usedContigs.contains(s) && !lastToFirst.containsKey(s))
+		for(int strand = 0; strand < 2; strand++)
 		{
-			continue;
-		}
-		ScaffoldGraph.Alignment best = consensus(s, sg.adj.get(s), usedContigs, scaffoldEdges);
-		if(best == null) continue;
-		String to = best.to;
-		
-		if(!usedContigs.contains(to))
-		{
-			if(usedContigs.contains(s))
+			// Ignore if already at start or middle of a scaffold
+			if(usedContigs.contains(s) && !lastToFirst.containsKey(s))
 			{
-				// s is the last contig in some scaffold
-				String firstContigInScaffold = lastToFirst.get(s);
-				ArrayDeque<String> allContigsInScaffold = scaffoldContigs.get(firstContigInScaffold);
-				ArrayDeque<ScaffoldGraph.Alignment> allEdgesInScaffold = scaffoldEdges.get(firstContigInScaffold);
-				allContigsInScaffold.addLast(to);
-				allEdgesInScaffold.add(best);
-				
-				usedContigs.add(to);
-				lastToFirst.remove(s);
-				lastToFirst.put(to, firstContigInScaffold);
+				continue;
 			}
+			ScaffoldGraph.Alignment best = consensus(s, sg.adj.get(s)[strand], usedContigs, scaffoldEdges);
+			if(best == null) continue;
+			String to = best.to;
+			
+			if(!usedContigs.contains(to))
+			{
+				if(usedContigs.contains(s))
+				{
+					// s is the last contig in some scaffold
+					String firstContigInScaffold = lastToFirst.get(s);
+					ArrayDeque<String> allContigsInScaffold = scaffoldContigs.get(firstContigInScaffold);
+					ArrayDeque<ScaffoldGraph.Alignment> allEdgesInScaffold = scaffoldEdges.get(firstContigInScaffold);
+					allContigsInScaffold.addLast(to);
+					allEdgesInScaffold.add(best);
+					
+					usedContigs.add(to);
+					lastToFirst.remove(s);
+					lastToFirst.put(to, firstContigInScaffold);
+				}
+				else
+				{
+					// s hasn't been connected to anything yet
+					scaffoldEdges.put(s, new ArrayDeque<ScaffoldGraph.Alignment>());
+					scaffoldContigs.put(s, new ArrayDeque<String>());
+					scaffoldContigs.get(s).addLast(s);
+					scaffoldContigs.get(s).addLast(to);
+					scaffoldEdges.get(s).addLast(best);
+					
+					usedContigs.add(s);
+					usedContigs.add(to);
+					lastToFirst.put(to, s);
+				}
+			}
+			
 			else
 			{
-				// s hasn't been connected to anything yet
-				scaffoldEdges.put(s, new ArrayDeque<ScaffoldGraph.Alignment>());
-				scaffoldContigs.put(s, new ArrayDeque<String>());
-				scaffoldContigs.get(s).addLast(s);
-				scaffoldContigs.get(s).addLast(to);
-				scaffoldEdges.get(s).addLast(best);
-				
-				usedContigs.add(s);
-				usedContigs.add(to);
-				lastToFirst.put(to, s);
-			}
-		}
-		
-		else
-		{
-			// In calculating best, already made sure it's the first in its scaffold
-			// Move entire scaffold with to to the end of the scaffold with s
-			String lastContigInScaffold = scaffoldContigs.get(to).peekLast();
-			if(usedContigs.contains(s))
-			{
-				String firstContigInScaffold = lastToFirst.get(s);
-				lastToFirst.remove(s);
-				lastToFirst.put(lastContigInScaffold, firstContigInScaffold);
-				scaffoldEdges.get(firstContigInScaffold).addLast(best);
-				while(!scaffoldEdges.get(to).isEmpty())
+				// In calculating best, already made sure it's the first in its scaffold
+				// Move entire scaffold with to to the end of the scaffold with s
+				String lastContigInScaffold = scaffoldContigs.get(to).peekLast();
+				if(usedContigs.contains(s))
 				{
-					scaffoldEdges.get(firstContigInScaffold).addLast(scaffoldEdges.get(to).pollFirst());
+					String firstContigInScaffold = lastToFirst.get(s);
+					lastToFirst.remove(s);
+					lastToFirst.put(lastContigInScaffold, firstContigInScaffold);
+					scaffoldEdges.get(firstContigInScaffold).addLast(best);
+					while(!scaffoldEdges.get(to).isEmpty())
+					{
+						scaffoldEdges.get(firstContigInScaffold).addLast(scaffoldEdges.get(to).pollFirst());
+					}
+					scaffoldEdges.remove(to);
+					
+					while(!scaffoldContigs.get(to).isEmpty())
+					{
+						scaffoldContigs.get(firstContigInScaffold).addLast(scaffoldContigs.get(to).pollFirst());
+					}
+					scaffoldContigs.remove(to);
 				}
-				scaffoldEdges.remove(to);
-				
-				while(!scaffoldContigs.get(to).isEmpty())
+				else
 				{
-					scaffoldContigs.get(firstContigInScaffold).addLast(scaffoldContigs.get(to).pollFirst());
+					// s is on its own
+					scaffoldEdges.put(s, scaffoldEdges.get(to));
+					scaffoldEdges.get(s).addFirst(best);
+					scaffoldEdges.remove(to);
+					
+					scaffoldContigs.put(s, scaffoldContigs.get(to));
+					scaffoldContigs.get(s).addFirst(s);
+					scaffoldContigs.remove(to);
+					
+					usedContigs.add(s);
+					
+					lastToFirst.put(lastContigInScaffold, s);
 				}
-				scaffoldContigs.remove(to);
 			}
-			else
-			{
-				// s is on its own
-				scaffoldEdges.put(s, scaffoldEdges.get(to));
-				scaffoldEdges.get(s).addFirst(best);
-				scaffoldEdges.remove(to);
-				
-				scaffoldContigs.put(s, scaffoldContigs.get(to));
-				scaffoldContigs.get(s).addFirst(s);
-				scaffoldContigs.remove(to);
-				
-				usedContigs.add(s);
-				
-				lastToFirst.put(lastContigInScaffold, s);
-			}
+			
+			numMerged++;
 		}
-		
-		numMerged++;
 	}
 	
 	for(String s : scaffoldContigs.keySet())
@@ -289,6 +287,10 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
 		if(spa.myReadEnd < spa.theirReadStart)
 		{
 			String readSeq = readMap.get(spa.read);
+			if(spa.strand == 1)
+			{
+				readSeq = Scaffold.reverseComplement(readSeq);
+			}
 			res.append(readSeq.substring(spa.myReadEnd, spa.theirReadStart));
 		}
 		else
@@ -437,7 +439,9 @@ static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als)
 			System.out.println("Edge: " + last.contigName+" "+spa.contigName);
 			int overlap = last.readEnd - spa.readStart;
 			if(overlap <= spa.contigLength && overlap <= last.contigLength)
-				sg.addEdge(last.contigName, spa.contigName, last.readName, last.readEnd, spa.readStart, lastReversed, !curReversed);
+			{
+				sg.addEdge(last.contigName, spa.contigName, last.readName, last.readEnd, spa.readStart, spa.readLength, lastReversed, !curReversed);
+			}
 		}
 		
 		last = spa;

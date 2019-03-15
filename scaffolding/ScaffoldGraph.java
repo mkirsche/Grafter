@@ -6,18 +6,32 @@ import java.util.*;
  * Map contig name -> contig name -> list of alignments
  */
 public class ScaffoldGraph {
-	HashMap<String,ArrayList<Alignment>> adj;
+	HashMap<String,ArrayList<Alignment>[]> adj;
 	ScaffoldGraph()
 	{
 		adj =  new HashMap<>();
 	}
-	void addEdge(String from, String to, String readName, int fromEnd, int toStart, boolean fromPrefix, boolean toPrefix)
+	@SuppressWarnings("unchecked")
+	void addEdge(String from, String to, String readName, int fromEnd, int toStart, int readLength, boolean fromPrefix, boolean toPrefix)
 	{
-		if(!adj.containsKey(from))
+		String[] contigs = new String[] {from, to};
+		for(String key : contigs)
 		{
-			adj.put(from, new ArrayList<Alignment>());
+			if(!adj.containsKey(key))
+			{
+				adj.put(key, new ArrayList[2]);
+				for(int i = 0; i<adj.get(key).length; i++)
+				{
+					adj.get(key)[i] = new ArrayList<>();
+				}
+			}
 		}
-		adj.get(from).add(new Alignment(to, readName, fromEnd, toStart, fromPrefix, toPrefix));
+				
+		// Add forward edge
+		adj.get(from)[0].add(new Alignment(to, readName, fromEnd, toStart, fromPrefix, toPrefix, 0));
+		
+		// Add reverse edge
+		adj.get(to)[1].add(new Alignment(from, readName, readLength - toStart, readLength - fromEnd, toPrefix, fromPrefix, 1));
 	}
 
 static class Alignment
@@ -28,7 +42,8 @@ static class Alignment
 	int theirReadStart;
 	boolean myContigPrefix;
 	boolean theirContigPrefix;
-	Alignment(String tt, String rr, int mre, int trs, boolean mcp, boolean tcp)
+	int strand;
+	Alignment(String tt, String rr, int mre, int trs, boolean mcp, boolean tcp, int ss)
 	{
 		to = tt;
 		read = rr;
@@ -36,6 +51,7 @@ static class Alignment
 		theirReadStart = trs;
 		myContigPrefix = mcp;
 		theirContigPrefix = tcp;
+		strand = ss;
 	}
 }
 }
