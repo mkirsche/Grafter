@@ -10,7 +10,7 @@ public class IncludeContained {
 	static int minReadSupport = 1;
 	static double minWeightSupport = 50000;
 	
-	static int maxHanging = 250;
+	static double maxHanging = 0.1;
 	static boolean fileMap = false;
 	static boolean correct = false;
 @SuppressWarnings("resource")
@@ -245,6 +245,8 @@ public static void main(String[] args) throws IOException
 				}
 			}
 			
+			System.err.println("Joining: " + s+" "+t+" "+strand + " " + best.read);
+			
 			numMerged++;
 		}
 	}
@@ -285,7 +287,6 @@ static String getHeaderLine(ArrayDeque<String> contigs)
 	}
 	
 	for(String s : contigs) res.append(" " + s);
-	
 	return res.toString();
 }
 
@@ -336,6 +337,9 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
  */
 static ScaffoldGraph.Alignment consensus(String from, ArrayList<ScaffoldGraph.Alignment> als, HashSet<String> usedContigs, HashMap<String, ArrayDeque<ScaffoldGraph.Alignment>> scaffoldEdges)
 {
+	/*
+	 * TODO adapt to reverse strand case
+	 */
 	HashMap<String, ArrayList<ScaffoldGraph.Alignment>> prefEdges = new HashMap<>();
 	HashMap<String, ArrayList<ScaffoldGraph.Alignment>> suffEdges = new HashMap<>();
 	for(ScaffoldGraph.Alignment a : als)
@@ -464,7 +468,7 @@ static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als)
 		
 		if(last != null)
 		{
-			System.out.println("Edge: " + last.contigName+" "+spa.contigName);
+			//System.out.println("Edge: " + last.contigName+" "+spa.contigName);
 			int overlap = last.readEnd - spa.readStart;
 			if(overlap <= spa.contigLength && overlap <= last.contigLength)
 			{
@@ -485,7 +489,8 @@ static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als)
  */
 static boolean[] contigStartEnd(FindUsefulScaffoldingAlignments.PafAlignment pa)
 {
-	return new boolean[] {pa.contigStart < maxHanging, pa.contigEnd + maxHanging >= pa.contigLength};
+	int length = pa.contigEnd - pa.contigStart;
+	return new boolean[] {pa.contigStart < maxHanging * length, pa.contigEnd + maxHanging * length >= pa.contigLength};
 }
 
 /*
@@ -493,7 +498,8 @@ static boolean[] contigStartEnd(FindUsefulScaffoldingAlignments.PafAlignment pa)
  */
 static boolean[] readStartEnd(FindUsefulScaffoldingAlignments.PafAlignment pa)
 {
-	return new boolean[] {pa.readStart < maxHanging, pa.readEnd + maxHanging >= pa.readLength};
+	int length = pa.readEnd - pa.readStart;
+	return new boolean[] {pa.readStart < maxHanging * length, pa.readEnd + maxHanging * length >= pa.readLength};
 }
 
 /*

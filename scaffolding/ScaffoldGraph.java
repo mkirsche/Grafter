@@ -28,11 +28,13 @@ public class ScaffoldGraph {
 		}
 				
 		// Add forward edge
-		adj.get(from)[0].add(new Alignment(to, readName, fromEnd, toStart, fromPrefix, toPrefix, 0, weight));
+		Alignment al = new Alignment(to, readName, fromEnd, toStart, fromPrefix, toPrefix, 0, weight, readLength);
+		adj.get(from)[0].add(al);
 		
 		// Add reverse edge
-		adj.get(to)[1].add(new Alignment(from, readName, readLength - toStart, readLength - fromEnd, toPrefix, fromPrefix, 1, weight));
+		adj.get(to)[1].add(al.reverse(from));
 	}
+	
 
 static class Alignment
 {
@@ -44,7 +46,8 @@ static class Alignment
 	boolean theirContigPrefix;
 	int strand;
 	double weight;
-	Alignment(String tt, String rr, int mre, int trs, boolean mcp, boolean tcp, int ss, double ww)
+	int readLength;
+	Alignment(String tt, String rr, int mre, int trs, boolean mcp, boolean tcp, int ss, double ww, int rl)
 	{
 		to = tt;
 		read = rr;
@@ -54,6 +57,13 @@ static class Alignment
 		theirContigPrefix = tcp;
 		strand = ss;
 		weight = ww;
+		this.readLength = rl;
+	}
+	
+	Alignment reverse(String from)
+	{
+		return new Alignment(from, read, readLength - theirReadStart, readLength - myReadEnd, 
+				theirContigPrefix, myContigPrefix, 1 - strand, weight, readLength);
 	}
 }
 }
