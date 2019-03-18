@@ -12,7 +12,7 @@ public class ScaffoldGraph {
 		adj =  new HashMap<>();
 	}
 	@SuppressWarnings("unchecked")
-	void addEdge(String from, String to, String readName, int fromEnd, int toStart, int readLength, boolean fromPrefix, boolean toPrefix)
+	void addEdge(String from, String to, String readName, int fromEnd, int toStart, int readLength, boolean fromPrefix, boolean toPrefix, double weight)
 	{
 		String[] contigs = new String[] {from, to};
 		for(String key : contigs)
@@ -28,10 +28,10 @@ public class ScaffoldGraph {
 		}
 				
 		// Add forward edge
-		adj.get(from)[0].add(new Alignment(to, readName, fromEnd, toStart, fromPrefix, toPrefix, 0));
+		adj.get(from)[0].add(new Alignment(to, readName, fromEnd, toStart, fromPrefix, toPrefix, 0, weight));
 		
 		// Add reverse edge
-		adj.get(to)[1].add(new Alignment(from, readName, readLength - toStart, readLength - fromEnd, toPrefix, fromPrefix, 1));
+		adj.get(to)[1].add(new Alignment(from, readName, readLength - toStart, readLength - fromEnd, toPrefix, fromPrefix, 1, weight));
 	}
 
 static class Alignment
@@ -43,7 +43,8 @@ static class Alignment
 	boolean myContigPrefix;
 	boolean theirContigPrefix;
 	int strand;
-	Alignment(String tt, String rr, int mre, int trs, boolean mcp, boolean tcp, int ss)
+	double weight;
+	Alignment(String tt, String rr, int mre, int trs, boolean mcp, boolean tcp, int ss, double ww)
 	{
 		to = tt;
 		read = rr;
@@ -52,6 +53,7 @@ static class Alignment
 		myContigPrefix = mcp;
 		theirContigPrefix = tcp;
 		strand = ss;
+		weight = ww;
 	}
 }
 }

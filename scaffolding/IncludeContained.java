@@ -8,8 +8,9 @@ public class IncludeContained {
 	
 	// The number of reads required to support the joining of two contigs
 	static int minReadSupport = 1;
+	static double minWeightSupport = 50000;
 	
-	static int maxHanging = 100;
+	static int maxHanging = 250;
 	static boolean fileMap = false;
 	static boolean correct = false;
 @SuppressWarnings("resource")
@@ -349,24 +350,28 @@ static ScaffoldGraph.Alignment consensus(String from, ArrayList<ScaffoldGraph.Al
 		}
 	}
 	ArrayList<ScaffoldGraph.Alignment> best = null;
+	double bestTotalWeight = 0;
 	for(String to : prefEdges.keySet())
 	{
 		if(usedContigs.contains(to) && !scaffoldEdges.containsKey(to)) continue;
 		if(scaffoldEdges.containsKey(to) && scaffoldEdges.get(to).peekLast().to.equals(from)) continue;
 		ArrayList<ScaffoldGraph.Alignment> al = prefEdges.get(to);
 		ArrayList<ScaffoldGraph.Alignment> valid = new ArrayList<>();
+		double totalWeight = 0;
 		for(ScaffoldGraph.Alignment a : al)
 		{
 			if(scaffoldEdges.containsKey(to) && scaffoldEdges.get(to).peekFirst().myContigPrefix == a.theirContigPrefix)
 			{
 				continue;
 			}
+			totalWeight += a.weight;
 			valid.add(a);
 		}
 		
-		if(best == null || valid.size() > best.size())
+		if(best == null || totalWeight > bestTotalWeight)
 		{
 			best = valid;
+			bestTotalWeight = totalWeight;
 		}
 	}
 	for(String to : suffEdges.keySet())
@@ -375,23 +380,27 @@ static ScaffoldGraph.Alignment consensus(String from, ArrayList<ScaffoldGraph.Al
 		if(scaffoldEdges.containsKey(to) && scaffoldEdges.get(to).peekLast().to.equals(from)) continue;
 		ArrayList<ScaffoldGraph.Alignment> valid = new ArrayList<>();
 		ArrayList<ScaffoldGraph.Alignment> al = suffEdges.get(to);
+		double totalWeight = 0;
 		for(ScaffoldGraph.Alignment a : al)
 		{
 			if(scaffoldEdges.containsKey(to) && scaffoldEdges.get(to).peekFirst().myContigPrefix == a.theirContigPrefix)
 			{
 				continue;
 			}
+			totalWeight += a.weight;
 			valid.add(a);
 		}
-		if(best == null || valid.size() > best.size())
+		if(best == null || totalWeight > bestTotalWeight)
 		{
 			best = valid;
+			bestTotalWeight = totalWeight;
 		}
 	}
 	
 	if(best == null || best.size() == 0) return null;
 	
-	if(best.size() < minReadSupport) return null;
+	if(best.size() < minReadSupport || bestTotalWeight < minWeightSupport) return null;
+	
 	
 	ScaffoldGraph.Alignment res = best.get(0);
 	
@@ -459,7 +468,10 @@ static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als)
 			int overlap = last.readEnd - spa.readStart;
 			if(overlap <= spa.contigLength && overlap <= last.contigLength)
 			{
-				sg.addEdge(last.contigName, spa.contigName, last.readName, last.readEnd, spa.readStart, spa.readLength, lastReversed, !curReversed);
+				double lastLength = last.contigEnd - last.contigStart;
+				double curLength = spa.contigEnd - spa.contigStart;
+				double weight = 2 * lastLength * curLength / (lastLength + curLength);
+				sg.addEdge(last.contigName, spa.contigName, last.readName, last.readEnd, spa.readStart, spa.readLength, lastReversed, !curReversed, weight);
 			}
 		}
 		
