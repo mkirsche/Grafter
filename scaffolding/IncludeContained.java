@@ -11,6 +11,7 @@ public class IncludeContained {
 	
 	static int maxHanging = 100;
 	static boolean fileMap = false;
+	static boolean correct = false;
 @SuppressWarnings("resource")
 public static void main(String[] args) throws IOException
 {
@@ -71,6 +72,16 @@ public static void main(String[] args) throws IOException
 		String readName = cur.readName;
 		
 		addInit(alignmentsPerRead, readName, cur);
+	}
+	
+	if(correct)
+	{
+		ArrayList<CorrectMisassemblies.BrokenContig> corrections = CorrectMisassemblies.correctAllContigs(alignmentsPerRead);
+		
+		if(corrections.size() > 0)
+		{
+			return;
+		}
 	}
 	
 	/*
