@@ -20,19 +20,19 @@ public static void main(String[] args) throws IOException
 	/*
 	 * File names for testing locally
 	 */
-	String pafFn = "rel2_200kplus_ccs_mat.paf";
+	/*String pafFn = "rel2_200kplus_ccs_mat.paf";
 	String fastaFn = "maternal_and_unknown.contigs.mmpoa.fa";
 	String readFn = "rel2_200kplus.fastq";
 	String readMapFile = "readmap_maternal.txt";
 	String contigMapFile = "contigmap_maternal.txt";
-	String outFn = "new_contigs.fa";
+	String outFn = "new_contigs.fa";*/
 	
-	/*String pafFn = "MaternalToAssembly.paf";
+	String pafFn = "AssemblyToMaternal.paf";
 	String fastaFn = "maternal_and_unknown.contigs.mmpoa.fa";
 	String readFn = "rel2wt_50kplus.ctg.fa";
 	String readMapFile = "readmap_maternal.txt";
 	String contigMapFile = "contigmap_maternal.txt";
-	String outFn = "new_contigs.fa";*/
+	String outFn = "new_contigs.fa";
 	
 	/*
 	 * Default files for testing on the server
@@ -133,7 +133,14 @@ public static void main(String[] args) throws IOException
 	if(!fileMap || (readMap = Scaffold.readMap(readMapFile)).size() == 0)
 	{
 		System.err.println("Filtering reads");
-		readMap = Scaffold.getFastqMap(readFn, readNames);
+		if(readFn.endsWith(".fa") || readFn.endsWith(".fasta"))
+		{
+			readMap = Scaffold.getFastaMap(readFn, readNames);
+		}
+		else
+		{
+			readMap = Scaffold.getFastqMap(readFn, readNames);
+		}
 		Scaffold.writeMap(readMapFile, readMap);
 	}
 	if(!fileMap || (contigMap = Scaffold.readMap(contigMapFile)).size() == 0)
