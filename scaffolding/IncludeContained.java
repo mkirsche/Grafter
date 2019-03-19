@@ -14,6 +14,7 @@ public class IncludeContained {
 	static int maxHanging = 100;
 	static boolean fileMap = false;
 	static boolean correct = false;
+	static boolean verbose = true;
 @SuppressWarnings("resource")
 public static void main(String[] args) throws IOException
 {
@@ -187,6 +188,10 @@ public static void main(String[] args) throws IOException
 			// Get the consensus edge of all edges going to the most highly supported contig
 			ScaffoldGraph.Alignment best = consensus(s, sg.adj.get(s)[strand], usedContigs, scaffoldEdges, lastToFirst);
 			if(best == null) continue;
+			if(lastToFirst.containsKey(s) && scaffoldEdges.get(lastToFirst.get(s)).peekLast().theirContigPrefix == best.myContigPrefix)
+			{
+				continue;
+			}
 			String t = best.to;
 			
 			if(!usedContigs.contains(t))
@@ -323,8 +328,10 @@ public static void main(String[] args) throws IOException
 					usedContigs.add(s);					
 				}
 			}
-			
-			System.err.println("Joining: " + s+" "+t+" "+strand + " " + best.read);
+			if(verbose)
+			{
+				System.err.println("Joining: " + s+" "+t+" "+strand + " " + best.read);
+			}
 			
 			numMerged++;
 		}
@@ -332,7 +339,10 @@ public static void main(String[] args) throws IOException
 	
 	for(String s : scaffoldContigs.keySet())
 	{
-		//System.out.println(getHeaderLine(scaffoldContigs.get(s)));
+		if(verbose)
+		{
+			System.err.println(getHeaderLine(scaffoldContigs.get(s)));
+		}
 		out.println(getHeaderLine(scaffoldContigs.get(s)));
 		
 		String seq = merge(scaffoldContigs.get(s), scaffoldEdges.get(s), readMap, contigMap);
@@ -393,10 +403,17 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
 		{
 			first = false;
 			String curSeq = relevantContigs.get(contigs.peekFirst());
+			if(verbose)
+			{
+				System.err.println(contigs.peekFirst()+" "+curSeq.length());
+			}
 			if(spa.myContigPrefix) curSeq = Scaffold.reverseComplement(curSeq);
 			res.append(curSeq);
 		}
-		//System.err.println(spa.to+" "+spa.myContigPrefix+" "+spa.theirContigPrefix+" "+spa.myReadEnd+" "+spa.theirReadStart+" "+spa.strand);
+		if(verbose)
+		{
+			System.err.println(spa.to+" "+spa.myContigPrefix+" "+spa.theirContigPrefix+" "+spa.myReadEnd+" "+spa.theirReadStart+" "+spa.strand+" ");
+		}
 		int overlap = 0;
 		if(spa.myReadEnd < spa.theirReadStart)
 		{
@@ -414,6 +431,11 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
 		
 		String curSeq = relevantContigs.get(spa.to);
 		
+		if(verbose)
+		{
+			System.err.println(spa.to + " " + curSeq.length() + " " +overlap);
+		}
+		
 		if(!spa.theirContigPrefix)
 		{
 			curSeq = Scaffold.reverseComplement(curSeq);
@@ -428,9 +450,6 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
  */
 static ScaffoldGraph.Alignment consensus(String from, ArrayList<ScaffoldGraph.Alignment> als, HashSet<String> usedContigs, HashMap<String, ArrayDeque<ScaffoldGraph.Alignment>> scaffoldEdges, HashMap<String, String> lastToFirst)
 {
-	/*
-	 * TODO adapt to reverse strand case
-	 */
 	HashMap<String, ArrayList<ScaffoldGraph.Alignment>> prefEdges = new HashMap<>();
 	HashMap<String, ArrayList<ScaffoldGraph.Alignment>> suffEdges = new HashMap<>();
 	for(ScaffoldGraph.Alignment a : als)
@@ -524,6 +543,11 @@ static ScaffoldGraph.Alignment consensus(String from, ArrayList<ScaffoldGraph.Al
 	
 	ScaffoldGraph.Alignment res = best.get(0);
 	
+	if(verbose)
+	{
+		System.err.println("Adding edge: " + from+" "+res.to+" "+res.myContigPrefix+" "+res.theirContigPrefix+" "+res.strand);
+	}
+	
 	return res;
 }
 
@@ -584,7 +608,6 @@ static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als)
 		
 		if(last != null)
 		{
-			//System.out.println("Edge: " + last.contigName+" "+spa.contigName);
 			int overlap = last.readEnd - spa.readStart;
 			if(overlap <= spa.contigLength && overlap <= last.contigLength)
 			{

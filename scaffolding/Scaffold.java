@@ -96,14 +96,6 @@ public static void main(String[] args) throws IOException
 			mapAdd(countSuffix, second.contigName, first.contigName);
 		}
 	}
-//	for(String s : countPrefix.keySet())
-//	{
-//		System.err.println(s+" "+countPrefix.get(s).size() + " " +  (countSuffix.containsKey(s) ? countSuffix.get(s).size() : 0));
-//	}
-//	for(String s : countSuffix.keySet())
-//	{
-//		System.err.println(s+" "+countSuffix.get(s).size() + " " +  (countPrefix.containsKey(s) ? countPrefix.get(s).size() : 0));
-//	}
 	
 	PrintWriter out = new PrintWriter(new File(outFile));
 	
