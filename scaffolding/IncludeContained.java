@@ -293,12 +293,17 @@ public static void main(String[] args) throws IOException
 						// Deal with edges
 						scaffoldEdges.put(s, new ArrayDeque<ScaffoldGraph.Alignment>());
 						scaffoldEdges.get(s).addFirst(best);
-						String lastTo = t;
+						String lastTo = tScaffoldKey;
+						ArrayDeque<ScaffoldGraph.Alignment> toAdd = new ArrayDeque<ScaffoldGraph.Alignment>();
 						while(!scaffoldEdges.get(tScaffoldKey).isEmpty())
 						{
-							ScaffoldGraph.Alignment cur = scaffoldEdges.get(tScaffoldKey).pollLast();
-							scaffoldEdges.get(s).addLast(cur.reverse(lastTo));
+							ScaffoldGraph.Alignment cur = scaffoldEdges.get(tScaffoldKey).pollFirst();
+							toAdd.addLast(cur.reverse(lastTo));
 							lastTo = cur.to;
+						}
+						while(!toAdd.isEmpty())
+						{
+							scaffoldEdges.get(s).addLast(toAdd.pollLast());
 						}
 						scaffoldEdges.remove(tScaffoldKey);
 						
@@ -391,7 +396,7 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
 			if(spa.myContigPrefix) curSeq = Scaffold.reverseComplement(curSeq);
 			res.append(curSeq);
 		}
-		System.err.println(spa.to+" "+spa.myContigPrefix+" "+spa.theirContigPrefix+" "+spa.myReadEnd+" "+spa.theirReadStart+" "+spa.strand);
+		//System.err.println(spa.to+" "+spa.myContigPrefix+" "+spa.theirContigPrefix+" "+spa.myReadEnd+" "+spa.theirReadStart+" "+spa.strand);
 		int overlap = 0;
 		if(spa.myReadEnd < spa.theirReadStart)
 		{
