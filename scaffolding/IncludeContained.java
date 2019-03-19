@@ -486,7 +486,7 @@ static ScaffoldGraph.Alignment consensus(String from, ArrayList<ScaffoldGraph.Al
 			{
 				continue;
 			}
-			if(lastToFirst.containsKey(to) && scaffoldEdges.get(lastToFirst.get(to)).peekLast().myContigPrefix == a.theirContigPrefix)
+			if(lastToFirst.containsKey(to) && scaffoldEdges.get(lastToFirst.get(to)).peekLast().theirContigPrefix == a.theirContigPrefix)
 			{
 				continue;
 			}
@@ -522,7 +522,7 @@ static ScaffoldGraph.Alignment consensus(String from, ArrayList<ScaffoldGraph.Al
 			{
 				continue;
 			}
-			if(lastToFirst.containsKey(to) && scaffoldEdges.get(lastToFirst.get(to)).peekLast().myContigPrefix == a.theirContigPrefix)
+			if(lastToFirst.containsKey(to) && scaffoldEdges.get(lastToFirst.get(to)).peekLast().theirContigPrefix == a.theirContigPrefix)
 			{
 				continue;
 			}
