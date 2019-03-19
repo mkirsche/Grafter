@@ -229,9 +229,12 @@ public static void main(String[] args) throws IOException
 					lastToFirst.put(lastContigInScaffold, firstContigInScaffold);
 					scaffoldEdges.get(firstContigInScaffold).addLast(best);
 					ArrayDeque<ScaffoldGraph.Alignment> tScaffoldEdges = scaffoldEdges.get(tScaffoldKey);
+					String lastTo = t;
 					while(!tScaffoldEdges.isEmpty())
 					{
-						scaffoldEdges.get(firstContigInScaffold).addLast(tFirst ? tScaffoldEdges.pollFirst() : tScaffoldEdges.pollLast());
+						ScaffoldGraph.Alignment cur = tFirst ? tScaffoldEdges.pollFirst() : tScaffoldEdges.pollLast();
+						scaffoldEdges.get(firstContigInScaffold).addLast(tFirst ? cur : cur.reverse(lastTo));
+						lastTo = cur.to;
 					}
 					scaffoldEdges.remove(tScaffoldKey);
 					
@@ -266,9 +269,12 @@ public static void main(String[] args) throws IOException
 						// Deal with edges
 						scaffoldEdges.put(s, new ArrayDeque<ScaffoldGraph.Alignment>());
 						scaffoldEdges.get(s).addFirst(best);
+						String lastTo = t;
 						while(!scaffoldEdges.get(tScaffoldKey).isEmpty())
 						{
-							scaffoldEdges.get(s).addLast(scaffoldEdges.get(tScaffoldKey).pollLast());
+							ScaffoldGraph.Alignment cur = scaffoldEdges.get(tScaffoldKey).pollLast();
+							scaffoldEdges.get(s).addLast(cur.reverse(lastTo));
+							lastTo = cur.to;
 						}
 						scaffoldEdges.remove(tScaffoldKey);
 						

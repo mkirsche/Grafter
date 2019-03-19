@@ -76,6 +76,10 @@ public static void  main(String[] args) throws IOException
 	out.close();
 	System.err.println("Number of useful alignments: " + tot);
 }
+/*
+ * Takes in paf line assuming minimap2 call was:
+ *     minimap2 <contigs> <reads>
+ */
 static class PafAlignment
 {
 	String readName, contigName;
@@ -83,7 +87,8 @@ static class PafAlignment
 	int contigLength, contigStart, contigEnd;
 	char strand;
 	String line;
-	PafAlignment(String line, int x)
+	// Call with a seond parameter to denote that read and contig were flipped when calling minimap2
+	PafAlignment(String line, int backwards)
 	{
 		this.line = line;
 		String[] ss = line.split("\t");
