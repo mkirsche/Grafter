@@ -11,7 +11,7 @@ public class IncludeContained {
 	static double minWeightSupport = 50000;
 	
 	static double maxHanging = 0.02;
-	static boolean fileMap = true;
+	static boolean fileMap = false;
 	static boolean correct = false;
 @SuppressWarnings("resource")
 public static void main(String[] args) throws IOException
