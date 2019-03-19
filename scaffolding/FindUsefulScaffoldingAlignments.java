@@ -87,7 +87,7 @@ static class PafAlignment
 	int contigLength, contigStart, contigEnd;
 	char strand;
 	String line;
-	// Call with a seond parameter to denote that read and contig were flipped when calling minimap2
+	// Call with a second parameter to denote that read and contig were flipped when calling minimap2
 	PafAlignment(String line, int backwards)
 	{
 		this.line = line;

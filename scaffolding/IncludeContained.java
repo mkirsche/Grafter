@@ -20,19 +20,19 @@ public static void main(String[] args) throws IOException
 	/*
 	 * File names for testing locally
 	 */
-	/*String pafFn = "rel2_200kplus_ccs_mat.paf";
+	String pafFn = "rel2_200kplus_ccs_mat.paf";
 	String fastaFn = "maternal_and_unknown.contigs.mmpoa.fa";
 	String readFn = "rel2_200kplus.fastq";
 	String readMapFile = "readmap_maternal.txt";
 	String contigMapFile = "contigmap_maternal.txt";
-	String outFn = "new_contigs.fa";*/
+	String outFn = "new_contigs.fa";
 	
-	String pafFn = "AssemblyToMaternal.paf";
+	/*String pafFn = "AssemblyToMaternal.paf";
 	String fastaFn = "maternal_and_unknown.contigs.mmpoa.fa";
 	String readFn = "rel2wt_50kplus.ctg.fa";
 	String readMapFile = "readmap_maternal.txt";
 	String contigMapFile = "contigmap_maternal.txt";
-	String outFn = "new_contigs.fa";
+	String outFn = "new_contigs.fa";*/
 	
 	/*
 	 * Default files for testing on the server
@@ -367,7 +367,7 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
 		if(spa.myReadEnd < spa.theirReadStart)
 		{
 			String readSeq = readMap.get(spa.read);
-			if(spa.strand == 1)
+			if(!spa.theirContigPrefix)
 			{
 				readSeq = Scaffold.reverseComplement(readSeq);
 			}
