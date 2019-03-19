@@ -10,7 +10,8 @@ public class IncludeContained {
 	static int minReadSupport = 1;
 	static double minWeightSupport = 50000;
 	
-	static double maxHanging = 0.02;
+	static double maxHangingProportion = 0.02;
+	static int maxHanging = 100;
 	static boolean fileMap = false;
 	static boolean correct = false;
 @SuppressWarnings("resource")
@@ -25,6 +26,13 @@ public static void main(String[] args) throws IOException
 	String readMapFile = "readmap_maternal.txt";
 	String contigMapFile = "contigmap_maternal.txt";
 	String outFn = "new_contigs.fa";
+	
+	/*String pafFn = "MaternalToAssembly.paf";
+	String fastaFn = "maternal_and_unknown.contigs.mmpoa.fa";
+	String readFn = "rel2wt_50kplus.ctg.fa";
+	String readMapFile = "readmap_maternal.txt";
+	String contigMapFile = "contigmap_maternal.txt";
+	String outFn = "new_contigs.fa";*/
 	
 	/*
 	 * Default files for testing on the server
@@ -551,7 +559,8 @@ static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als)
 static boolean[] contigStartEnd(FindUsefulScaffoldingAlignments.PafAlignment pa)
 {
 	int length = pa.contigEnd - pa.contigStart;
-	return new boolean[] {pa.contigStart < maxHanging * length, pa.contigEnd + maxHanging * length >= pa.contigLength};
+	double curMaxHanging = Math.min(maxHangingProportion*length, maxHanging);
+	return new boolean[] {pa.contigStart < curMaxHanging, pa.contigEnd + curMaxHanging >= pa.contigLength};
 }
 
 /*

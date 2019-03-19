@@ -83,6 +83,20 @@ static class PafAlignment
 	int contigLength, contigStart, contigEnd;
 	char strand;
 	String line;
+	PafAlignment(String line, int x)
+	{
+		this.line = line;
+		String[] ss = line.split("\t");
+		contigName = ss[0];
+		contigLength = Integer.parseInt(ss[1]);
+		contigStart = Integer.parseInt(ss[2]);
+		contigEnd = Integer.parseInt(ss[3]);
+		strand = ss[4].charAt(0);
+		readName = ss[5];
+		readLength = Integer.parseInt(ss[6]);
+		readStart = Integer.parseInt(ss[7]);
+		readEnd = Integer.parseInt(ss[8]);
+	}
 	PafAlignment(String line)
 	{
 		this.line = line;
