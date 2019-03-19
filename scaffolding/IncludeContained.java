@@ -10,8 +10,8 @@ public class IncludeContained {
 	static int minReadSupport = 1;
 	static double minWeightSupport = 50000;
 	
-	static double maxHanging = 0.1;
-	static boolean fileMap = false;
+	static double maxHanging = 0.02;
+	static boolean fileMap = true;
 	static boolean correct = false;
 @SuppressWarnings("resource")
 public static void main(String[] args) throws IOException
@@ -170,12 +170,14 @@ public static void main(String[] args) throws IOException
 			}
 			
 			// Get the consensus edge of all edges going to the most highly supported contig
-			ScaffoldGraph.Alignment best = consensus(s, sg.adj.get(s)[strand], usedContigs, scaffoldEdges);
+			ScaffoldGraph.Alignment best = consensus(s, sg.adj.get(s)[strand], usedContigs, scaffoldEdges, lastToFirst);
 			if(best == null) continue;
 			String t = best.to;
 			
 			if(!usedContigs.contains(t))
 			{
+				// t is by itself in a contig
+				
 				if(usedContigs.contains(s))
 				{
 					// s is the last contig in some scaffold
@@ -206,9 +208,11 @@ public static void main(String[] args) throws IOException
 			
 			else
 			{
-				// In calculating best, already made sure it's the first in its scaffold
+				// In calculating best, already made sure it's the first or last in its scaffold
 				// Move entire scaffold with t to the end of the scaffold with s
-				String lastContigInScaffold = scaffoldContigs.get(t).peekLast();
+				boolean tFirst = scaffoldContigs.containsKey(t);
+				String lastContigInScaffold = tFirst ? scaffoldContigs.get(t).peekLast() : lastToFirst.get(t);
+				String tScaffoldKey = tFirst ? t : lastContigInScaffold;
 				if(usedContigs.contains(s))
 				{
 					// s is the last contig in a scaffold, so append the scaffold with to after s
@@ -216,32 +220,64 @@ public static void main(String[] args) throws IOException
 					lastToFirst.remove(s);
 					lastToFirst.put(lastContigInScaffold, firstContigInScaffold);
 					scaffoldEdges.get(firstContigInScaffold).addLast(best);
-					while(!scaffoldEdges.get(t).isEmpty())
+					ArrayDeque<ScaffoldGraph.Alignment> tScaffoldEdges = scaffoldEdges.get(tScaffoldKey);
+					while(!tScaffoldEdges.isEmpty())
 					{
-						scaffoldEdges.get(firstContigInScaffold).addLast(scaffoldEdges.get(t).pollFirst());
+						scaffoldEdges.get(firstContigInScaffold).addLast(tFirst ? tScaffoldEdges.pollFirst() : tScaffoldEdges.pollLast());
 					}
-					scaffoldEdges.remove(t);
+					scaffoldEdges.remove(tScaffoldKey);
 					
-					while(!scaffoldContigs.get(t).isEmpty())
+					ArrayDeque<String> tScaffoldContigs = scaffoldContigs.get(tScaffoldKey);
+					while(!tScaffoldContigs.isEmpty())
 					{
-						scaffoldContigs.get(firstContigInScaffold).addLast(scaffoldContigs.get(t).pollFirst());
+						scaffoldContigs.get(firstContigInScaffold).addLast(tFirst ? tScaffoldContigs.pollFirst() : tScaffoldContigs.pollLast());
 					}
-					scaffoldContigs.remove(t);
+					scaffoldContigs.remove(tScaffoldKey);
+					if(!tFirst)
+					{
+						lastToFirst.remove(t);
+					}
 				}
 				else
 				{
 					// s is on its own, so add it to the beginning of the scaffold with t
-					scaffoldEdges.put(s, scaffoldEdges.get(t));
-					scaffoldEdges.get(s).addFirst(best);
-					scaffoldEdges.remove(t);
-					
-					scaffoldContigs.put(s, scaffoldContigs.get(t));
-					scaffoldContigs.get(s).addFirst(s);
-					scaffoldContigs.remove(t);
-					
-					usedContigs.add(s);
-					
-					lastToFirst.put(lastContigInScaffold, s);
+					if(tFirst)
+					{
+						scaffoldEdges.put(s, scaffoldEdges.get(t));
+						scaffoldEdges.get(s).addFirst(best);
+						scaffoldEdges.remove(t);
+						scaffoldContigs.put(s, scaffoldContigs.get(t));
+						scaffoldContigs.get(s).addFirst(s);
+						scaffoldContigs.remove(t);
+						lastToFirst.put(lastContigInScaffold, s);
+					}
+					else
+					{
+						// t is at the end of its scaffold, so reverse scaffold and add it to new scaffold
+						
+						// Deal with edges
+						scaffoldEdges.put(s, new ArrayDeque<ScaffoldGraph.Alignment>());
+						scaffoldEdges.get(s).addFirst(best);
+						while(!scaffoldEdges.get(tScaffoldKey).isEmpty())
+						{
+							scaffoldEdges.get(s).addLast(scaffoldEdges.get(tScaffoldKey).pollLast());
+						}
+						scaffoldEdges.remove(tScaffoldKey);
+						
+						// Deal with list of contigs
+						scaffoldContigs.put(s, new ArrayDeque<String>());
+						scaffoldContigs.get(s).addFirst(s);
+						while(!scaffoldContigs.get(tScaffoldKey).isEmpty())
+						{
+							scaffoldContigs.get(s).addLast(scaffoldContigs.get(tScaffoldKey).pollLast());
+						}
+						scaffoldContigs.remove(tScaffoldKey);
+						
+						// Deal with lastToFirst
+						lastToFirst.remove(t);
+						lastToFirst.put(tScaffoldKey, s);
+					}
+					usedContigs.add(s);					
 				}
 			}
 			
@@ -335,7 +371,7 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
 /*
  * Gets the best alignment of another contig to follow a given contig
  */
-static ScaffoldGraph.Alignment consensus(String from, ArrayList<ScaffoldGraph.Alignment> als, HashSet<String> usedContigs, HashMap<String, ArrayDeque<ScaffoldGraph.Alignment>> scaffoldEdges)
+static ScaffoldGraph.Alignment consensus(String from, ArrayList<ScaffoldGraph.Alignment> als, HashSet<String> usedContigs, HashMap<String, ArrayDeque<ScaffoldGraph.Alignment>> scaffoldEdges, HashMap<String, String> lastToFirst)
 {
 	/*
 	 * TODO adapt to reverse strand case
@@ -357,17 +393,30 @@ static ScaffoldGraph.Alignment consensus(String from, ArrayList<ScaffoldGraph.Al
 	double bestTotalWeight = 0;
 	for(String to : prefEdges.keySet())
 	{
-		if(usedContigs.contains(to) && !scaffoldEdges.containsKey(to)) continue;
+		// Make sure the destination is on one of the ends of its scaffold
+		if(usedContigs.contains(to) && !scaffoldEdges.containsKey(to) && !lastToFirst.containsKey(to)) continue;
+		
+		// Make sure that the destination isn't the beginning of the scaffold the edge is coming from
 		if(scaffoldEdges.containsKey(to) && scaffoldEdges.get(to).peekLast().to.equals(from)) continue;
+		
+		// Make sure that the destination isn't the end of the scaffold the edge is coming from
+		if(lastToFirst.containsKey(to) && lastToFirst.get(to).equals(from)) continue;
+		
 		ArrayList<ScaffoldGraph.Alignment> al = prefEdges.get(to);
 		ArrayList<ScaffoldGraph.Alignment> valid = new ArrayList<>();
 		double totalWeight = 0;
 		for(ScaffoldGraph.Alignment a : al)
 		{
+			// Make sure this edge doesn't use the same side of the destination as an existing edge
 			if(scaffoldEdges.containsKey(to) && scaffoldEdges.get(to).peekFirst().myContigPrefix == a.theirContigPrefix)
 			{
 				continue;
 			}
+			if(lastToFirst.containsKey(to) && scaffoldEdges.get(lastToFirst.get(to)).peekLast().myContigPrefix == a.theirContigPrefix)
+			{
+				continue;
+			}
+			
 			totalWeight += a.weight;
 			valid.add(a);
 		}
@@ -380,14 +429,26 @@ static ScaffoldGraph.Alignment consensus(String from, ArrayList<ScaffoldGraph.Al
 	}
 	for(String to : suffEdges.keySet())
 	{
-		if(usedContigs.contains(to) && !scaffoldEdges.containsKey(to)) continue;
+		// Make sure the destination is on one of the ends of its scaffold
+		if(usedContigs.contains(to) && !scaffoldEdges.containsKey(to) && !lastToFirst.containsKey(to)) continue;
+				
+		// Make sure that the destination isn't the beginning of the scaffold the edge is coming from
 		if(scaffoldEdges.containsKey(to) && scaffoldEdges.get(to).peekLast().to.equals(from)) continue;
+				
+		// Make sure that the destination isn't the end of the scaffold the edge is coming from
+		if(lastToFirst.containsKey(to) && lastToFirst.get(to).equals(from)) continue;
+		
 		ArrayList<ScaffoldGraph.Alignment> valid = new ArrayList<>();
 		ArrayList<ScaffoldGraph.Alignment> al = suffEdges.get(to);
 		double totalWeight = 0;
 		for(ScaffoldGraph.Alignment a : al)
 		{
+			// Make sure this edge doesn't use the same side of the destination as an existing edge
 			if(scaffoldEdges.containsKey(to) && scaffoldEdges.get(to).peekFirst().myContigPrefix == a.theirContigPrefix)
+			{
+				continue;
+			}
+			if(lastToFirst.containsKey(to) && scaffoldEdges.get(lastToFirst.get(to)).peekLast().myContigPrefix == a.theirContigPrefix)
 			{
 				continue;
 			}

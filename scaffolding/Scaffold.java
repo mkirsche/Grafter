@@ -276,6 +276,7 @@ static void mapAdd(HashMap<String, HashSet<String>> map, String s, String t)
 @SuppressWarnings("resource")
 static HashMap<String, String> readMap(String fn) throws IOException
 {
+	System.err.println("Reading map from " + fn);
 	try {
 		Scanner input = new Scanner(new FileInputStream(new File(fn)));
 		HashMap<String, String> res = new HashMap<String, String>();
