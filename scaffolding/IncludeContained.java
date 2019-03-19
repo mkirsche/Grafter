@@ -236,13 +236,30 @@ public static void main(String[] args) throws IOException
 					lastToFirst.put(lastContigInScaffold, firstContigInScaffold);
 					scaffoldEdges.get(firstContigInScaffold).addLast(best);
 					ArrayDeque<ScaffoldGraph.Alignment> tScaffoldEdges = scaffoldEdges.get(tScaffoldKey);
-					String lastTo = t;
-					while(!tScaffoldEdges.isEmpty())
+					if(tFirst)
 					{
-						ScaffoldGraph.Alignment cur = tFirst ? tScaffoldEdges.pollFirst() : tScaffoldEdges.pollLast();
-						scaffoldEdges.get(firstContigInScaffold).addLast(tFirst ? cur : cur.reverse(lastTo));
-						lastTo = cur.to;
+						while(!tScaffoldEdges.isEmpty())
+						{
+							ScaffoldGraph.Alignment cur = tScaffoldEdges.pollFirst();
+							scaffoldEdges.get(firstContigInScaffold).addLast(cur);
+						}
 					}
+					else
+					{
+						String lastTo = tScaffoldKey;
+						ArrayDeque<ScaffoldGraph.Alignment> toAdd = new ArrayDeque<ScaffoldGraph.Alignment>();
+						while(!tScaffoldEdges.isEmpty())
+						{
+							ScaffoldGraph.Alignment cur = tScaffoldEdges.pollFirst();
+							toAdd.addLast(cur.reverse(lastTo));
+							lastTo = cur.to;
+						}
+						while(!toAdd.isEmpty())
+						{
+							scaffoldEdges.get(firstContigInScaffold).addLast(toAdd.pollLast());
+						}
+					}
+					
 					scaffoldEdges.remove(tScaffoldKey);
 					
 					ArrayDeque<String> tScaffoldContigs = scaffoldContigs.get(tScaffoldKey);
@@ -310,6 +327,7 @@ public static void main(String[] args) throws IOException
 	
 	for(String s : scaffoldContigs.keySet())
 	{
+		//System.out.println(getHeaderLine(scaffoldContigs.get(s)));
 		out.println(getHeaderLine(scaffoldContigs.get(s)));
 		
 		String seq = merge(scaffoldContigs.get(s), scaffoldEdges.get(s), readMap, contigMap);
@@ -336,14 +354,24 @@ static <T> void addInit(HashMap<String, ArrayList<T>> map, String key, T val)
 static String getHeaderLine(ArrayDeque<String> contigs)
 {
 	StringBuilder res = new StringBuilder("");
+	HashSet<String> contigSet = new HashSet<String>();
 	for(String s : contigs)
 	{
 		if(res.length() > 0) res.append("&");
 		else res.append(">");
 		res.append(s);
+		if(contigSet.contains(s))
+		{
+			//System.out.println(res.toString()+" "+s);
+			//System.out.println(1/0);
+		}
+		contigSet.add(s);
 	}
 	
-	for(String s : contigs) res.append(" " + s);
+	for(String s : contigs)
+	{
+		res.append(" " + s);
+	}
 	return res.toString();
 }
 
@@ -363,6 +391,7 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
 			if(spa.myContigPrefix) curSeq = Scaffold.reverseComplement(curSeq);
 			res.append(curSeq);
 		}
+		System.err.println(spa.to+" "+spa.myContigPrefix+" "+spa.theirContigPrefix+" "+spa.myReadEnd+" "+spa.theirReadStart+" "+spa.strand);
 		int overlap = 0;
 		if(spa.myReadEnd < spa.theirReadStart)
 		{
