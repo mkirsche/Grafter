@@ -2,6 +2,8 @@ package scaffolding;
 
 import java.util.*;
 
+import scaffolding.CorrectMisassemblies.ContigBreaker;
+
 import java.io.*;
 
 public class IncludeContained {
@@ -13,7 +15,6 @@ public class IncludeContained {
 	static double maxHangingProportion = 0.02;
 	static int maxHanging = 100;
 	static boolean fileMap = false;
-	static boolean correct = false;
 	static boolean verbose = true;
 @SuppressWarnings("resource")
 public static void main(String[] args) throws IOException
@@ -84,21 +85,21 @@ public static void main(String[] args) throws IOException
 		addInit(alignmentsPerRead, readName, cur);
 	}
 	
-	if(correct)
+	ArrayList<CorrectMisassemblies.NovelAdjacency> corrections = CorrectMisassemblies.findMisassemblies(alignmentsPerRead);
+	for(CorrectMisassemblies.NovelAdjacency na : corrections)
 	{
-		ArrayList<CorrectMisassemblies.BrokenContig> corrections = CorrectMisassemblies.correctAllContigs(alignmentsPerRead);
-		
-		if(corrections.size() > 0)
-		{
-			return;
-		}
+		System.err.println(na);
 	}
+	
+	HashSet<String> contigNames = new HashSet<>();
+	
+	CorrectMisassemblies.ContigBreaker splitter = new CorrectMisassemblies.ContigBreaker(corrections, contigNames);
+	alignmentsPerRead = CorrectMisassemblies.remapAll(splitter, alignmentsPerRead);
 	
 	/*
 	 * Get chains of unique mappings and keep track of contigs/reads involved in them
 	 */
 	HashMap<String, ArrayList<ArrayList<SortablePafAlignment>>> chainsPerRead = new HashMap<>();
-	HashSet<String> contigNames = new HashSet<String>();
 	HashSet<String> readNames = new HashSet<String>();
 	for(String s : alignmentsPerRead.keySet())
 	{
@@ -130,7 +131,7 @@ public static void main(String[] args) throws IOException
 	/*
 	 * Get sequences of relevant contigs/reads for merging
 	 */
-	HashMap<String, String> readMap, contigMap;
+	HashMap<String, String> readMap = new HashMap<>(), contigMap = new HashMap<>();
 	if(!fileMap || (readMap = Scaffold.readMap(readMapFile)).size() == 0)
 	{
 		System.err.println("Filtering reads");
@@ -149,6 +150,24 @@ public static void main(String[] args) throws IOException
 		System.err.println("Filtering contigs");
 		contigMap = Scaffold.getFastaMap(fastaFn, contigNames);
 		Scaffold.writeMap(contigMapFile, contigMap);
+	}
+	if(verbose)
+	{
+		System.err.println("Split contigs:\n" +splitter.subcontigMap.keySet());
+	}
+	ArrayList<String> keys = new ArrayList<String>();
+	keys.addAll(contigMap.keySet());
+	for(String s : keys)
+	{
+		if(splitter.breakSequence(s, contigMap.get(s)))
+		{
+			contigMap.remove(s);
+		}
+	}
+	
+	for(String splitContigName : splitter.sequenceMap.keySet())
+	{
+		contigMap.put(splitContigName, splitter.sequenceMap.get(splitContigName));
 	}
 	
 	/*
@@ -341,13 +360,25 @@ public static void main(String[] args) throws IOException
 	{
 		if(verbose)
 		{
-			System.err.println(getHeaderLine(scaffoldContigs.get(s)));
+			System.err.println(getHeaderLine(scaffoldContigs.get(s), splitter));
 		}
-		out.println(getHeaderLine(scaffoldContigs.get(s)));
+		out.println(getHeaderLine(scaffoldContigs.get(s), splitter));
 		
 		String seq = merge(scaffoldContigs.get(s), scaffoldEdges.get(s), readMap, contigMap);
 		
 		out.println(seq);
+	}
+	for(String s : splitter.subcontigMap.keySet())
+	{
+		ArrayList<CorrectMisassemblies.ContigBreaker.Subcontig> cur = splitter.subcontigMap.get(s);
+		for(CorrectMisassemblies.ContigBreaker.Subcontig sc : cur)
+		{
+			if(!usedContigs.contains(sc.name))
+			{
+				out.println(">" + sc.name + " " + sc.oldName);
+				out.println(splitter.sequenceMap.get(sc.name));
+			}
+		}
 	}
 	System.err.println("Number of joins: " + numMerged);
 	
@@ -366,7 +397,7 @@ static <T> void addInit(HashMap<String, ArrayList<T>> map, String key, T val)
  * Create a Fasta header line for a scaffold based on the names of contigs which make it up
  * format is >contigs1&contig2&... contig1 contig2 contig3 ...
  */
-static String getHeaderLine(ArrayDeque<String> contigs)
+static String getHeaderLine(ArrayDeque<String> contigs, ContigBreaker splitter)
 {
 	StringBuilder res = new StringBuilder("");
 	HashSet<String> contigSet = new HashSet<String>();
@@ -375,17 +406,19 @@ static String getHeaderLine(ArrayDeque<String> contigs)
 		if(res.length() > 0) res.append("&");
 		else res.append(">");
 		res.append(s);
-		if(contigSet.contains(s))
-		{
-			//System.out.println(res.toString()+" "+s);
-			//System.out.println(1/0);
-		}
 		contigSet.add(s);
 	}
 	
 	for(String s : contigs)
 	{
-		res.append(" " + s);
+		if(splitter.sourceMap.containsKey(s))
+		{
+			res.append(" " + splitter.sourceMap.get(s));
+		}
+		else
+		{
+			res.append(" " + s);
+		}
 	}
 	return res.toString();
 }
@@ -430,7 +463,7 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
 		}
 		
 		String curSeq = relevantContigs.get(spa.to);
-		
+				
 		if(verbose)
 		{
 			System.err.println(spa.to + " " + curSeq.length() + " " +overlap);
@@ -647,7 +680,7 @@ static boolean[] readStartEnd(FindUsefulScaffoldingAlignments.PafAlignment pa)
  * Also, filters out invalid alignments
  */
 static int MAX_GAP = 10000;
-static ArrayList<SortablePafAlignment> compress(ArrayList<SortablePafAlignment> alignments)
+static ArrayList<SortablePafAlignment> compress(ArrayList<SortablePafAlignment> alignments, boolean filterInvalid)
 {
 	int n = alignments.size();
 
@@ -719,7 +752,7 @@ static ArrayList<SortablePafAlignment> compress(ArrayList<SortablePafAlignment> 
 		/*
 		 * We have whether the alignment set covers the start/end of contig/read, so check that it's valid
 		 */
-		if(!cse[0] && !cse[1])
+		if(filterInvalid && !cse[0] && !cse[1])
 		{
 			/*
 			 * Middle portion of contig aligns somewhere on read but neither end of it
@@ -729,10 +762,10 @@ static ArrayList<SortablePafAlignment> compress(ArrayList<SortablePafAlignment> 
 			i = j-1;
 			continue;
 		}
-		else if(!rse[0] && !rse[1])
+		else if(filterInvalid && !rse[0] && !rse[1])
 		{
 			/*
-			 * Neither end of the contig is involved, so it must be contained in the read
+			 * Neither end of the read is involved, so contig must be contained in the read
 			 * Filter out cases which don't reflect this
 			 */
 			if(!cse[0] || !cse[1])
@@ -778,7 +811,7 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 	/*
 	 * Compress all alignments of the same contig and remove invalid alignments
 	 */
-	alignments = compress(alignments);
+	alignments = compress(alignments, true);
 	
 	/*
 	 * List of chains of alignments
@@ -849,7 +882,12 @@ static class SortablePafAlignment extends FindUsefulScaffoldingAlignments.PafAli
 	}
 	SortablePafAlignment copy()
 	{
-		return new SortablePafAlignment(line);
+		SortablePafAlignment res = new SortablePafAlignment(line);
+		if(!res.contigName.equals(contigName)) res.contigName = contigName;
+		if(res.contigStart != contigStart) res.contigStart = contigStart;
+		if(res.contigLength != contigLength) res.contigLength = contigLength;
+		if(res.contigEnd != contigEnd) res.contigEnd = contigEnd;
+		return res;
 	}
 	
 }
