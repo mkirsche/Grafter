@@ -28,7 +28,7 @@ readmapbroken=$readsfn'_usefulmap2.paf.broken'
 contigmapbroken=$contigsfn'_usefulmap2.paf.broken'
 newcontigsbroken=$contigsfn'_newcontigs2.paf.broken'
 if [ ! -f $brokenpaffn ]; then
-    echo "PAF file not found - generating it"
+    echo "Broken PAF file not found - generating it"
     $minimappath -t 32 -k 19 -w 19 $brokencontigs $readsfn  > $brokenpaffn
 fi
 java -cp $BINDIR scaffolding.IncludeContained $brokenpaffn $brokencontigs $readsfn $readmapbroken $contigmapbroken $newcontigsbroken

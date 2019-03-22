@@ -40,6 +40,12 @@ public static void main(String[] args) throws IOException
 			for(String sc : subcontigs)
 			{
 				used.add(sc);
+				
+				// Handle contigs which were broken in a previous run
+				if(sc.indexOf('_') != -1)
+				{
+					used.add(sc.substring(0, sc.indexOf('_')));
+				}
 			}
 			String contig = br.readLine();
 			out.println(">" + name);
