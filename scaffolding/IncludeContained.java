@@ -86,9 +86,14 @@ public static void main(String[] args) throws IOException
 	}
 	
 	ArrayList<CorrectMisassemblies.NovelAdjacency> corrections = CorrectMisassemblies.findMisassemblies(alignmentsPerRead);
-	for(CorrectMisassemblies.NovelAdjacency na : corrections)
+	
+	if(verbose)
 	{
-		System.err.println(na);
+		for(CorrectMisassemblies.NovelAdjacency na : corrections)
+		{
+			System.err.println(na);
+		}
+		System.err.println("Number of misassemblies: " + corrections.size());
 	}
 	
 	HashSet<String> contigNames = new HashSet<>();
@@ -347,10 +352,6 @@ public static void main(String[] args) throws IOException
 					usedContigs.add(s);					
 				}
 			}
-			if(verbose)
-			{
-				System.err.println("Joining: " + s+" "+t+" "+strand + " " + best.read);
-			}
 			
 			numMerged++;
 		}
@@ -575,11 +576,6 @@ static ScaffoldGraph.Alignment consensus(String from, ArrayList<ScaffoldGraph.Al
 	
 	
 	ScaffoldGraph.Alignment res = best.get(0);
-	
-	if(verbose)
-	{
-		System.err.println("Adding edge: " + from+" "+res.to+" "+res.myContigPrefix+" "+res.theirContigPrefix+" "+res.strand);
-	}
 	
 	return res;
 }

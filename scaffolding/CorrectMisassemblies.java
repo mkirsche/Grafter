@@ -9,7 +9,7 @@ import java.util.*;
 import scaffolding.IncludeContained.SortablePafAlignment;
 
 public class CorrectMisassemblies {
-	static int buffer = 20000;	
+	static int buffer = 50000;	
 /*
  * Takes all alignments to a read and looks for evidence of chimeric contigs
  */
@@ -98,8 +98,8 @@ static boolean check(NovelAdjacency na, HashMap<String, ArrayList<IncludeContain
 			evidence += harmonicMean(na.pos2 - spa.contigStart, spa.contigEnd - na.pos2);
 		}
 	}
-	//System.out.println(na + " " +evidence);
-	return evidence * 10 < na.weight;
+	System.out.println(na.contig1+" "+na.contig2+" "+na.weight+" "+evidence);
+	return evidence < na.weight;
 }
 static ArrayList<NovelAdjacency> compressAndFilter(ArrayList<NovelAdjacency> nas, boolean filter, HashMap<String, ArrayList<IncludeContained.SortablePafAlignment>> byContig)
 {
@@ -262,7 +262,6 @@ static class ContigBreaker
 			ArrayList<Subcontig> scs = subcontigMap.get(contigName);
 			for(Subcontig sc : scs)
 			{
-				System.err.println(sc.name);
 				sequenceMap.put(sc.name, sequence.substring(sc.startPos, sc.endPos));
 			}
 			return true;
