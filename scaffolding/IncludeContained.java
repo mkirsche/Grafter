@@ -16,18 +16,22 @@ public class IncludeContained {
 	static int maxHanging = 100;
 	static boolean fileMap = false;
 	static boolean verbose = true;
+	static boolean outputBroken = false;
+	static boolean allowBreaks = false;
 @SuppressWarnings("resource")
 public static void main(String[] args) throws IOException
 {
 	/*
 	 * File names for testing locally
 	 */
-	String pafFn = "rel2_200kplus_ccs_mat.paf";
-	String fastaFn = "maternal_and_unknown.contigs.mmpoa.fa";
+	//String pafFn = "rel2_200kplus_ccs_mat.paf";
+	String pafFn = "brokenmaternal.paf";
+	String fastaFn = "maternal_and_unknown.contigs.mmpoa.intra.chimera.broken.fa";
 	String readFn = "rel2_200kplus.fastq";
 	String readMapFile = "readmap_maternal.txt";
 	String contigMapFile = "contigmap_maternal.txt";
 	String outFn = "new_contigs.fa";
+	String brokenOutputFile = fastaFn + ".broken";
 	
 	/*String pafFn = "AssemblyToMaternal.paf";
 	String fastaFn = "maternal_and_unknown.contigs.mmpoa.fa";
@@ -60,6 +64,18 @@ public static void main(String[] args) throws IOException
 		readMapFile = args[3];
 		contigMapFile = args[4];
 		outFn = args[5];
+		for(int i = 6; i<args.length; i++)
+		{
+			if(args[i].equals("--break"))
+			{
+				allowBreaks = true;
+			}
+			else if(args[i].startsWith("--outputbroken="))
+			{
+				outputBroken = true;
+				brokenOutputFile = args[i].substring(args[i].indexOf('=')+1);
+			}
+		}
 	}
 	
 	Scanner input = new Scanner(new FileInputStream(new File(pafFn)));
@@ -85,15 +101,18 @@ public static void main(String[] args) throws IOException
 		addInit(alignmentsPerRead, readName, cur);
 	}
 	
-	ArrayList<CorrectMisassemblies.NovelAdjacency> corrections = CorrectMisassemblies.findMisassemblies(alignmentsPerRead);
-	
-	if(verbose)
+	ArrayList<CorrectMisassemblies.NovelAdjacency> corrections = new ArrayList<CorrectMisassemblies.NovelAdjacency>();
+	if(allowBreaks)
 	{
-		for(CorrectMisassemblies.NovelAdjacency na : corrections)
+		corrections = CorrectMisassemblies.findMisassemblies(alignmentsPerRead);
+		if(verbose)
 		{
-			System.err.println(na);
+			for(CorrectMisassemblies.NovelAdjacency na : corrections)
+			{
+				System.err.println(na);
+			}
+			System.err.println("Number of misassemblies: " + corrections.size());
 		}
-		System.err.println("Number of misassemblies: " + corrections.size());
 	}
 	
 	HashSet<String> contigNames = new HashSet<>();
@@ -131,6 +150,15 @@ public static void main(String[] args) throws IOException
 			chainsPerRead.put(s, chains);
 			readNames.add(s);
 		}
+	}
+	
+	/*
+	 * Output broken assembly
+	 */
+	if(outputBroken && corrections.size() > 0)
+	{
+		System.err.println("Outputting broken assembly");
+		splitter.outputBrokenAssembly(fastaFn, brokenOutputFile);
 	}
 	
 	/*
@@ -446,7 +474,7 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
 		}
 		if(verbose)
 		{
-			System.err.println(spa.to+" "+spa.myContigPrefix+" "+spa.theirContigPrefix+" "+spa.myReadEnd+" "+spa.theirReadStart+" "+spa.strand+" ");
+			System.err.println(spa.to+" "+spa.myContigPrefix+" "+spa.theirContigPrefix+" "+spa.myReadEnd+" "+spa.theirReadStart+" "+spa.strand+" "+" "+spa.read);
 		}
 		int overlap = 0;
 		if(spa.myReadEnd < spa.theirReadStart)

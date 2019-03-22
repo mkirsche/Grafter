@@ -4,6 +4,11 @@
 
 package scaffolding;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.*;
 
 import scaffolding.IncludeContained.SortablePafAlignment;
@@ -302,6 +307,91 @@ static class ContigBreaker
 			int startPos = breakPositions.get(i);
 			int endPos = (i == breakPositions.size() - 1) ? lengthMap.get(contigName) : breakPositions.get(i+1);
 			res.add(new Subcontig(startPos, endPos, contigName + "_" + (i+2), contigName));
+		}
+		return res;
+	}
+	@SuppressWarnings("resource")
+	void outputBrokenAssembly(String fn, String ofn) throws IOException
+	{
+		BufferedReader br = new BufferedReader(new FileReader(new File(fn)));
+		PrintWriter out = new PrintWriter(new File(ofn));
+		
+		String contigName = br.readLine().split(" ")[0].substring(1);
+		StringBuilder seq = new StringBuilder("");
+		
+		while(true)
+		{
+			try {
+				String line = br.readLine();
+				if(line.charAt(0) == '>')
+				{
+					// process last read
+					print(contigName, seq.toString(), out);
+					seq = new StringBuilder("");
+					// new read name
+					contigName = line.split(" ")[0].substring(1);
+				}
+				else
+				{
+					seq.append(line);
+				}
+			} catch(Exception e) {
+				break;
+			}
+		}
+		print(contigName, seq.toString(), out);
+		out.close();
+	}
+	void print(String contigName, String seq, PrintWriter out)
+	{
+		if(breakSequence(contigName, seq))
+		{
+			ArrayList<Subcontig> scs = subcontigMap.get(contigName);
+			for(Subcontig sc : scs)
+			{
+				out.println(">"+sc.name+"\n"+sequenceMap.get(sc.name));
+			}
+		}
+		else
+		{
+			out.println(">"+contigName+"\n"+seq);
+		}
+		
+	}
+	static HashMap<String, String> getFastaMap(String fn, HashSet<String> names) throws IOException
+	{
+		HashMap<String, String> res = new HashMap<String, String>();
+		BufferedReader br = new BufferedReader(new FileReader(new File(fn)));
+		String readName = br.readLine().split(" ")[0].substring(1);
+		StringBuilder seq = new StringBuilder("");
+		boolean useful = names.contains(readName);
+		while(true)
+		{
+			try {
+				String line = br.readLine();
+				if(line.charAt(0) == '>')
+				{
+					// process last read
+					if(useful)
+					{
+						res.put(readName, seq.toString());
+						seq = new StringBuilder("");
+					}
+					// new read name
+					readName = line.split(" ")[0].substring(1);
+					useful = names.contains(readName);
+				}
+				else if(useful)
+				{
+					seq.append(line);
+				}
+			} catch(Exception e) {
+				break;
+			}
+		}
+		if(useful)
+		{
+			res.put(readName, seq.toString());
 		}
 		return res;
 	}
