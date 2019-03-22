@@ -99,7 +99,7 @@ static boolean check(NovelAdjacency na, HashMap<String, ArrayList<IncludeContain
 		}
 	}
 	System.out.println(na.contig1+" "+na.contig2+" "+na.weight+" "+evidence);
-	return evidence < na.weight;
+	return evidence *  1.5 < na.weight;
 }
 static ArrayList<NovelAdjacency> compressAndFilter(ArrayList<NovelAdjacency> nas, boolean filter, HashMap<String, ArrayList<IncludeContained.SortablePafAlignment>> byContig)
 {
