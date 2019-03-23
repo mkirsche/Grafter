@@ -517,10 +517,6 @@ static ScaffoldGraph.Alignment consensus(String from, ArrayList<ScaffoldGraph.Al
 	HashMap<String, ArrayList<ScaffoldGraph.Alignment>> suffEdges = new HashMap<>();
 	for(ScaffoldGraph.Alignment a : als)
 	{
-		if(from.equals("tig00000197_1"))
-		{
-			System.out.println(a.to+" "+a.myContigPrefix+" "+a.theirContigPrefix+" "+a.weight);
-		}
 		if(a.myContigPrefix)
 		{
 			addInit(prefEdges, a.to, a);
@@ -686,13 +682,20 @@ static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als)
 }
 
 /*
- * Whether or not an alignment contains the start/end of the cintig involved
+ * General end checking for alignments
+ */
+static boolean[] startEnd(int startPos, int endPos, int length)
+{
+	double curMaxHanging = Math.min(maxHangingProportion*length, maxHanging);
+	return new boolean[] {startPos < curMaxHanging, endPos + curMaxHanging >= length};
+}
+
+/*
+ * Whether or not an alignment contains the start/end of the contig involved
  */
 static boolean[] contigStartEnd(FindUsefulScaffoldingAlignments.PafAlignment pa)
 {
-	int length = pa.contigEnd - pa.contigStart;
-	double curMaxHanging = Math.min(maxHangingProportion*length, maxHanging);
-	return new boolean[] {pa.contigStart < curMaxHanging, pa.contigEnd + curMaxHanging >= pa.contigLength};
+	return startEnd(pa.contigStart, pa.contigEnd, pa.contigLength);
 }
 
 /*
@@ -700,8 +703,7 @@ static boolean[] contigStartEnd(FindUsefulScaffoldingAlignments.PafAlignment pa)
  */
 static boolean[] readStartEnd(FindUsefulScaffoldingAlignments.PafAlignment pa)
 {
-	int length = pa.readEnd - pa.readStart;
-	return new boolean[] {pa.readStart < maxHanging * length, pa.readEnd + maxHanging * length >= pa.readLength};
+	return startEnd(pa.readStart, pa.readEnd, pa.readLength);
 }
 
 /*
