@@ -63,11 +63,6 @@ static ArrayList<NovelAdjacency> findInversions(ArrayList<IncludeContained.Sorta
 		}
 	}
 	
-	for(NovelAdjacency na : res)
-	{
-		System.out.println("Inversion: " + na);
-	}
-	
 	return res;
 }
 	static int buffer = 50000;	
