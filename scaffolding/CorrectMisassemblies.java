@@ -225,7 +225,7 @@ static class NovelAdjacency implements Comparable<NovelAdjacency>
 		weight = ww;
 		prefix1 = pr1;
 		prefix2 = pr2;
-		if(contig1.compareTo(contig2) > 0)
+		if(contig1.compareTo(contig2) > 0 || (contig1.equals(contig2) && pos1 > pos2))
 		{
 			String tmp = contig1;
 			contig1 = contig2;
