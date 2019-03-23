@@ -29,22 +29,23 @@ if [ "$breakcontigs" -eq "0" ]; then
     exit;
 fi
 
-brokencontigs=$contigsfn'.broken'
-echo 'Scaffolding'
-java -cp $BINDIR scaffolding.IncludeContained $paffn $contigsfn $readsfn $readmap $contigmap $newcontigs '--break' '--outputbroken='$brokencontigs
-echo 'Scaffolds with original mappings output to '$newcontigs
+#brokencontigs=$contigsfn'.broken'
+#echo 'Scaffolding'
+#java -cp $BINDIR scaffolding.IncludeContained $paffn $contigsfn $readsfn $readmap $contigmap $newcontigs '--break --outputbroken='$brokencontigs
+java -cp $BINDIR scaffolding.IncludeContained $paffn $contigsfn $readsfn $readmap $contigmap $newcontigs '--break --outputbroken='$brokencontigs
+#echo 'Scaffolds with original mappings output to '$newcontigs
 
-brokenpaffn=$paffn'.broken.paf'
-readmapbroken=$readsfn'_usefulmap2.paf.broken'
-contigmapbroken=$contigsfn'_usefulmap2.paf.broken'
-newcontigsbroken=$contigsfn'_newcontigs2.paf.broken'
-if [ ! -f $brokenpaffn ]; then
-    echo "Broken PAF file not found - generating it"
-    $minimappath -t 32 -k 19 -w 19 $brokencontigs $readsfn  > $brokenpaffn
-fi
-java -cp $BINDIR scaffolding.IncludeContained $brokenpaffn $brokencontigs $readsfn $readmapbroken $contigmapbroken $newcontigsbroken
-echo 'Scaffolds with updated mappings output to '$newcontigsbroken
+#brokenpaffn=$paffn'.broken.paf'
+#readmapbroken=$readsfn'_usefulmap2.paf.broken'
+#contigmapbroken=$contigsfn'_usefulmap2.paf.broken'
+#newcontigsbroken=$contigsfn'_newcontigs2.paf.broken'
+#if [ ! -f $brokenpaffn ]; then
+#    echo "Broken PAF file not found - generating it"
+#    $minimappath -t 32 -k 19 -w 19 $brokencontigs $readsfn  > $brokenpaffn
+#fi
+#java -cp $BINDIR scaffolding.IncludeContained $brokenpaffn $brokencontigs $readsfn $readmapbroken $contigmapbroken $newcontigsbroken
+echo 'Scaffolds with updated mappings output to '$newcontigs
 
 echo 'Integrating scaffolds into assembly'
-java -cp $BINDIR scaffolding.StitchFasta $contigsfn $newcontigsbroken $outfile
+java -cp $BINDIR scaffolding.StitchFasta $contigsfn $newcontigs $outfile
 echo 'Final assembly output to '$outfile
