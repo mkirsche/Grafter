@@ -157,7 +157,8 @@ static boolean check(NovelAdjacency na, HashMap<String, ArrayList<IncludeContain
 	}
 	if(na.contig1.equals("tig00000197"))
 	System.out.println(na.contig1+" "+na.contig2+" "+na.weight+" "+na.pos1+" "+na.pos2+" "+evidence);
-	return evidence *  1 < na.weight;
+	double evidenceRatio = 1.5;
+	return evidence * evidenceRatio < na.weight || (na.contig1.equals(na.contig2) && evidence * evidenceRatio / 2 < na.weight);
 }
 static ArrayList<NovelAdjacency> compressAndFilter(ArrayList<NovelAdjacency> nas, boolean filter, HashMap<String, ArrayList<IncludeContained.SortablePafAlignment>> byContig)
 {
