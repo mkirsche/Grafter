@@ -19,7 +19,7 @@ javac $BINDIR/scaffolding/*.java
 
 readmap=$OUTDIR'/usefulreads.paf'
 contigmap=$OUTDIR'/usefulcontigs.paf'
-newcontigs=$OUTDI'/newcontigs2.paf'
+newcontigs=$OUTDIR'/newcontigs2.paf'
 
 if [ "$breakcontigs" -eq "0" ]; then
     java -cp $BINDIR scaffolding.IncludeContained $paffn $contigsfn $readsfn $readmap $contigmap $newcontigs
