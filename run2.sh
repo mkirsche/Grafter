@@ -3,6 +3,7 @@ readsfn=$2
 paffn=$3
 outfile=$4
 breakcontigs=$5
+OUTDIR=$6
 
 minimappath=/scratch/groups/mschatz1/mkirsche/github/minimap2/minimap2
 
@@ -16,9 +17,9 @@ BINDIR=`dirname $(readlink -f "$0")`
 echo 'Compiling'
 javac $BINDIR/scaffolding/*.java
 
-readmap=$readsfn'_usefulmap2.paf'
-contigmap=$contigsfn'_usefulmap2.paf'
-newcontigs=$contigsfn'_newcontigs2.paf'
+readmap=$OUTDIR'/usefulreads.paf'
+contigmap=$OUTDIR'/usefulcontigs.paf'
+newcontigs=$OUTDI'/newcontigs2.paf'
 
 if [ "$breakcontigs" -eq "0" ]; then
     java -cp $BINDIR scaffolding.IncludeContained $paffn $contigsfn $readsfn $readmap $contigmap $newcontigs
@@ -32,7 +33,7 @@ fi
 #brokencontigs=$contigsfn'.broken'
 #echo 'Scaffolding'
 #java -cp $BINDIR scaffolding.IncludeContained $paffn $contigsfn $readsfn $readmap $contigmap $newcontigs '--break --outputbroken='$brokencontigs
-java -cp $BINDIR scaffolding.IncludeContained $paffn $contigsfn $readsfn $readmap $contigmap $newcontigs '--break --outputbroken='$brokencontigs
+java -cp $BINDIR scaffolding.IncludeContained $paffn $contigsfn $readsfn $readmap $contigmap $newcontigs '--break'
 #echo 'Scaffolds with original mappings output to '$newcontigs
 
 #brokenpaffn=$paffn'.broken.paf'

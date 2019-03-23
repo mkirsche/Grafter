@@ -155,8 +155,9 @@ static boolean check(NovelAdjacency na, HashMap<String, ArrayList<IncludeContain
 			evidence += harmonicMean(na.pos2 - spa.contigStart, spa.contigEnd - na.pos2);
 		}
 	}
-	//System.out.println(na.contig1+" "+na.contig2+" "+na.weight+" "+evidence);
-	return evidence *  1.5 < na.weight;
+	if(na.contig1.equals("tig00000197"))
+	System.out.println(na.contig1+" "+na.contig2+" "+na.weight+" "+na.pos1+" "+na.pos2+" "+evidence);
+	return evidence *  1 < na.weight;
 }
 static ArrayList<NovelAdjacency> compressAndFilter(ArrayList<NovelAdjacency> nas, boolean filter, HashMap<String, ArrayList<IncludeContained.SortablePafAlignment>> byContig)
 {
