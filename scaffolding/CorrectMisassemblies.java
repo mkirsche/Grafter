@@ -14,6 +14,62 @@ import java.util.*;
 import scaffolding.IncludeContained.SortablePafAlignment;
 
 public class CorrectMisassemblies {
+	
+static ArrayList<NovelAdjacency> findInversions(ArrayList<IncludeContained.SortablePafAlignment> alignments)
+{
+	ArrayList<NovelAdjacency> res = new ArrayList<>();
+	
+	int n = alignments.size();
+
+	Comparator<SortablePafAlignment> byContigName = new Comparator<SortablePafAlignment>() {
+
+		@Override
+		public int compare(SortablePafAlignment a, SortablePafAlignment b) {
+			if(a.contigName.equals(b.contigName))
+			{
+				return a.compareTo(b);
+			}
+			return a.contigName.compareTo(b.contigName);
+		}
+	};
+	
+	// Sort by contig name and break ties by read start position
+	Collections.sort(alignments, byContigName);
+	for(int i = 0; i<n; i++)
+	{
+		// Find the end of the run of alignments of the current contig
+		int j = i+1;
+		while(j< n && alignments.get(i).contigName.equals(alignments.get(j).contigName))
+		{
+			j++;
+		}
+		
+		// Now alignments[i:j) has all the alignments of this contig - look for changes in strand
+		for(int k = i+1; k<j; k++)
+		{
+			SortablePafAlignment last = alignments.get(k-1), cur = alignments.get(k);
+			boolean lastPrefix = last.strand == '-';
+			boolean curPrefix = cur.strand == '+';
+			if(last.strand != cur.strand)
+			{
+				double weight = harmonicMean(last.contigEnd - last.contigStart, cur.contigEnd - cur.contigStart);
+				if(weight >= 20000)
+				{
+					res.add(new NovelAdjacency(last.contigName, cur.contigName, lastPrefix ? last.contigStart : last.contigEnd, 
+						curPrefix ? cur.contigStart : cur.contigEnd, last.contigLength, cur.contigLength, last.readName, 
+								weight, lastPrefix, curPrefix));
+				}
+			}
+		}
+	}
+	
+	for(NovelAdjacency na : res)
+	{
+		System.out.println("Inversion: " + na);
+	}
+	
+	return res;
+}
 	static int buffer = 50000;	
 /*
  * Takes all alignments to a read and looks for evidence of chimeric contigs
@@ -21,6 +77,8 @@ public class CorrectMisassemblies {
 static ArrayList<NovelAdjacency> findChimeras(ArrayList<IncludeContained.SortablePafAlignment> alignments)
 {
 	ArrayList<NovelAdjacency> res = new ArrayList<NovelAdjacency>();
+	ArrayList<NovelAdjacency> inv = findInversions(alignments);
+	res.addAll(inv);
 	ArrayList<IncludeContained.SortablePafAlignment> compressed = IncludeContained.compress(alignments, false);
 	if(compressed.size() < 2) return res;
 	IncludeContained.SortablePafAlignment last = compressed.get(0);
@@ -30,7 +88,6 @@ static ArrayList<NovelAdjacency> findChimeras(ArrayList<IncludeContained.Sortabl
 		
 		boolean lastPrefix = last.strand == '-';
 		boolean curPrefix = cur.strand == '+';
-		
 		
 		boolean lastNonEnd = false, curNonEnd = false;
 		
@@ -103,7 +160,7 @@ static boolean check(NovelAdjacency na, HashMap<String, ArrayList<IncludeContain
 			evidence += harmonicMean(na.pos2 - spa.contigStart, spa.contigEnd - na.pos2);
 		}
 	}
-	System.out.println(na.contig1+" "+na.contig2+" "+na.weight+" "+evidence);
+	//System.out.println(na.contig1+" "+na.contig2+" "+na.weight+" "+evidence);
 	return evidence *  1.5 < na.weight;
 }
 static ArrayList<NovelAdjacency> compressAndFilter(ArrayList<NovelAdjacency> nas, boolean filter, HashMap<String, ArrayList<IncludeContained.SortablePafAlignment>> byContig)

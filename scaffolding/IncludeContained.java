@@ -17,21 +17,22 @@ public class IncludeContained {
 	static boolean fileMap = false;
 	static boolean verbose = true;
 	static boolean outputBroken = false;
-	static boolean allowBreaks = false;
+	static boolean allowBreaks = true;
 @SuppressWarnings("resource")
 public static void main(String[] args) throws IOException
 {
 	/*
 	 * File names for testing locally
 	 */
-	//String pafFn = "rel2_200kplus_ccs_mat.paf";
-	String pafFn = "brokenmaternal.paf";
-	String fastaFn = "maternal_and_unknown.contigs.mmpoa.intra.chimera.broken.fa";
+	String pafFn = "rel2_200kplus_ccs_mat.paf";
+	//String pafFn = "brokenmaternal.paf";
+	String fastaFn = "maternal_and_unknown.contigs.mmpoa.fa";
+	//String fastaFn = "maternal_and_unknown.contigs.mmpoa.intra.chimera.broken.fa";
 	String readFn = "rel2_200kplus.fastq";
 	String readMapFile = "readmap_maternal.txt";
 	String contigMapFile = "contigmap_maternal.txt";
 	String outFn = "new_contigs.fa";
-	String brokenOutputFile = fastaFn + ".broken";
+	String brokenOutputFile = fastaFn;
 	
 	/*String pafFn = "AssemblyToMaternal.paf";
 	String fastaFn = "maternal_and_unknown.contigs.mmpoa.fa";

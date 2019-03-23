@@ -44,7 +44,7 @@ public static void main(String[] args) throws IOException
 				// Handle contigs which were broken in a previous run
 				if(sc.indexOf('_') != -1)
 				{
-					used.add(sc.substring(0, sc.indexOf('_')));
+					used.add(sc.substring(0, sc.lastIndexOf('_')));
 				}
 			}
 			String contig = br.readLine();
