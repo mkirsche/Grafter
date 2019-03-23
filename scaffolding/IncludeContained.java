@@ -517,6 +517,10 @@ static ScaffoldGraph.Alignment consensus(String from, ArrayList<ScaffoldGraph.Al
 	HashMap<String, ArrayList<ScaffoldGraph.Alignment>> suffEdges = new HashMap<>();
 	for(ScaffoldGraph.Alignment a : als)
 	{
+		if(from.equals("tig00000197_1"))
+		{
+			System.out.println(a.to+" "+a.myContigPrefix+" "+a.theirContigPrefix+" "+a.weight);
+		}
 		if(a.myContigPrefix)
 		{
 			addInit(prefEdges, a.to, a);
