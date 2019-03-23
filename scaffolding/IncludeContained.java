@@ -664,7 +664,7 @@ static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als)
 			}
 		}
 		
-		if(last != null)
+		if(last != null && !last.contigName.equals(spa.contigName))
 		{
 			int overlap = last.readEnd - spa.readStart;
 			if(overlap <= spa.contigLength && overlap <= last.contigLength)
@@ -736,11 +736,19 @@ static ArrayList<SortablePafAlignment> compress(ArrayList<SortablePafAlignment> 
 		// Now alignments[i:j) has all the alignments of this contig - combine or remove them
 		boolean[] rse = new boolean[2], cse = new boolean[2];
 		boolean gapFree = true;
+		boolean sameStrand = true;
 		int lastReadEndPosition = alignments.get(i).readEnd;
 		int lastContigEndPosition = alignments.get(i).contigEnd;
 		for(int k = i; k<j; k++)
 		{
 			SortablePafAlignment cur = alignments.get(k);
+			
+			if(k > i && alignments.get(k-1).strand != alignments.get(k).strand)
+			{
+				sameStrand = false;
+				j = k;
+				break;
+			}
 			
 			// Check for a gap between this alignment and the last one in either the read or contig
 			if(cur.contigStart - lastContigEndPosition > MAX_GAP)
@@ -784,7 +792,7 @@ static ArrayList<SortablePafAlignment> compress(ArrayList<SortablePafAlignment> 
 			 * Only possible case is read contained in contig, making alignment useless
 			 * Throw out the alignment and update i
 			 */
-			i = j-1;
+			i = j - 1;
 			continue;
 		}
 		else if(filterInvalid && !rse[0] && !rse[1])
@@ -813,7 +821,7 @@ static ArrayList<SortablePafAlignment> compress(ArrayList<SortablePafAlignment> 
 				total.readStart = Math.min(total.readStart, cur.readStart);
 				total.readEnd = Math.max(total.readEnd, cur.readEnd);
 			}
-			i = j-1;
+			i = j - 1;
 			filtered.add(total);
 		}
 	}
