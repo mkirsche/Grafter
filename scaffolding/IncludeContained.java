@@ -13,7 +13,7 @@ public class IncludeContained {
 	static double minWeightSupport = 50000;
 	
 	static double maxHangingProportion = 0.02;
-	static int maxHanging = 100;
+	static int maxHanging = 250;
 	static boolean fileMap = false;
 	static boolean verbose = true;
 	static boolean outputBroken = false;
