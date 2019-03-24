@@ -4,7 +4,7 @@ paffn=$3
 outfile=$4
 breakcontigs=$5
 OUTDIR=$6
-
+echo 'breakcontigs: '$breakcontigs
 minimappath=/scratch/groups/mschatz1/mkirsche/github/minimap2/minimap2
 
 if [ ! -f $paffn ]; then
@@ -22,6 +22,7 @@ contigmap=$OUTDIR'/usefulcontigs.paf'
 newcontigs=$OUTDIR'/newcontigs2.paf'
 
 if [ "$breakcontigs" -eq "0" ]; then
+    echo 'No correction'
     java -cp $BINDIR scaffolding.IncludeContained $paffn $contigsfn $readsfn $readmap $contigmap $newcontigs
     echo 'Scaffolds output to '$newcontigs
     echo 'Integrating scaffolds into assembly'
