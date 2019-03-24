@@ -50,7 +50,7 @@ static ArrayList<NovelAdjacency> findInversions(ArrayList<IncludeContained.Sorta
 			SortablePafAlignment last = alignments.get(k-1), cur = alignments.get(k);
 			boolean lastPrefix = last.strand == '-';
 			boolean curPrefix = cur.strand == '+';
-			if(last.strand != cur.strand)
+			if(last.strand != cur.strand && cur.contigStart < last.contigEnd + buffer)
 			{
 				double weight = harmonicMean(last.contigEnd - last.contigStart, cur.contigEnd - cur.contigStart);
 				if(weight >= 20000)
@@ -155,7 +155,6 @@ static boolean check(NovelAdjacency na, HashMap<String, ArrayList<IncludeContain
 			evidence += harmonicMean(na.pos2 - spa.contigStart, spa.contigEnd - na.pos2);
 		}
 	}
-	if(na.contig1.equals("tig00000197"))
 	System.out.println(na.contig1+" "+na.contig2+" "+na.weight+" "+na.pos1+" "+na.pos2+" "+evidence);
 	double evidenceRatio = 1.5;
 	return evidence * evidenceRatio < na.weight || (na.contig1.equals(na.contig2) && evidence * evidenceRatio / 2 < na.weight);
