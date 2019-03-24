@@ -50,7 +50,7 @@ static ArrayList<NovelAdjacency> findInversions(ArrayList<IncludeContained.Sorta
 			SortablePafAlignment last = alignments.get(k-1), cur = alignments.get(k);
 			boolean lastPrefix = last.strand == '-';
 			boolean curPrefix = cur.strand == '+';
-			if(last.strand != cur.strand && cur.contigStart < last.contigEnd + buffer)
+			if(last.strand != cur.strand && cur.readStart < last.readEnd + buffer)
 			{
 				double weight = harmonicMean(last.contigEnd - last.contigStart, cur.contigEnd - cur.contigStart);
 				if(weight >= 20000)
