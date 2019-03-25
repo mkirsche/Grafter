@@ -24,15 +24,15 @@ public static void main(String[] args) throws IOException
 	/*
 	 * File names for testing locally
 	 */
-	String pafFn = "rel2_200kplus_ccs_mat.paf";
+	String pafFn = "/home/mkirsche/eclipse-workspace/Ultralong/rel2_200kplus_ccs_mat.paf";
 	//String pafFn = "brokenmaternal.paf";
-	String fastaFn = "maternal_and_unknown.contigs.mmpoa.fa";
+	String fastaFn = "/home/mkirsche/eclipse-workspace/Ultralong/maternal_and_unknown.contigs.mmpoa.fa";
 	//String fastaFn = "maternal_and_unknown.contigs.mmpoa.intra.chimera.broken.fa";
-	String readFn = "rel2_200kplus.fastq";
-	String readMapFile = "readmap_maternal.txt";
-	String contigMapFile = "contigmap_maternal.txt";
-	String outFn = "new_contigs.fa";
-	String brokenOutputFile = fastaFn;
+	String readFn = "/home/mkirsche/eclipse-workspace/Ultralong/rel2_200kplus.fastq";
+	String readMapFile = "/home/mkirsche/eclipse-workspace/Ultralong/readmap_maternal.txt";
+	String contigMapFile = "/home/mkirsche/eclipse-workspace/Ultralong/contigmap_maternal.txt";
+	String outFn = "/home/mkirsche/eclipse-workspace/Ultralong/new_contigs.fa";
+	String brokenOutputFile = fastaFn + ".broken";
 	
 	/*String pafFn = "AssemblyToMaternal.paf";
 	String fastaFn = "maternal_and_unknown.contigs.mmpoa.fa";
@@ -99,7 +99,7 @@ public static void main(String[] args) throws IOException
 		
 		String readName = cur.readName;
 		
-		addInit(alignmentsPerRead, readName, cur);
+		ReadUtils.addInit(alignmentsPerRead, readName, cur);
 	}
 	
 	ArrayList<CorrectMisassemblies.NovelAdjacency> corrections = new ArrayList<CorrectMisassemblies.NovelAdjacency>();
@@ -166,24 +166,24 @@ public static void main(String[] args) throws IOException
 	 * Get sequences of relevant contigs/reads for merging
 	 */
 	HashMap<String, String> readMap = new HashMap<>(), contigMap = new HashMap<>();
-	if(!fileMap || (readMap = Scaffold.readMap(readMapFile)).size() == 0)
+	if(!fileMap || (readMap = ReadUtils.readMap(readMapFile)).size() == 0)
 	{
 		System.err.println("Filtering reads");
 		if(readFn.endsWith(".fa") || readFn.endsWith(".fasta"))
 		{
-			readMap = Scaffold.getFastaMap(readFn, readNames);
+			readMap = ReadUtils.getFastaMap(readFn, readNames);
 		}
 		else
 		{
-			readMap = Scaffold.getFastqMap(readFn, readNames);
+			readMap = ReadUtils.getFastqMap(readFn, readNames);
 		}
-		Scaffold.writeMap(readMapFile, readMap);
+		ReadUtils.writeMap(readMapFile, readMap);
 	}
-	if(!fileMap || (contigMap = Scaffold.readMap(contigMapFile)).size() == 0)
+	if(!fileMap || (contigMap = ReadUtils.readMap(contigMapFile)).size() == 0)
 	{
 		System.err.println("Filtering contigs");
-		contigMap = Scaffold.getFastaMap(fastaFn, contigNames);
-		Scaffold.writeMap(contigMapFile, contigMap);
+		contigMap = ReadUtils.getFastaMap(fastaFn, contigNames);
+		ReadUtils.writeMap(contigMapFile, contigMap);
 	}
 	if(verbose)
 	{
@@ -239,7 +239,7 @@ public static void main(String[] args) throws IOException
 			}
 			
 			// Get the consensus edge of all edges going to the most highly supported contig
-			ScaffoldGraph.Alignment best = consensus(s, sg.adj.get(s)[strand], usedContigs, scaffoldEdges, lastToFirst);
+			ScaffoldGraph.Alignment best = ScaffoldGraphBuilder.consensus(s, sg.adj.get(s)[strand], usedContigs, scaffoldEdges, lastToFirst);
 			if(best == null) continue;
 			if(lastToFirst.containsKey(s) && scaffoldEdges.get(lastToFirst.get(s)).peekLast().theirContigPrefix == best.myContigPrefix)
 			{
@@ -386,18 +386,26 @@ public static void main(String[] args) throws IOException
 		}
 	}
 	
+	/*
+	 * Output all scaffolds consisting of multiple contigs
+	 */
 	for(String s : scaffoldContigs.keySet())
 	{
+		String headerLine = createHeaderLine(scaffoldContigs.get(s), splitter);
 		if(verbose)
 		{
-			System.err.println(getHeaderLine(scaffoldContigs.get(s), splitter));
+			System.err.println(headerLine);
 		}
-		out.println(getHeaderLine(scaffoldContigs.get(s), splitter));
+		out.println(headerLine);
 		
 		String seq = merge(scaffoldContigs.get(s), scaffoldEdges.get(s), readMap, contigMap);
 		
 		out.println(seq);
 	}
+	
+	/*
+	 * Output subcontigs which were not rejoined to anything
+	 */
 	for(String s : splitter.subcontigMap.keySet())
 	{
 		ArrayList<CorrectMisassemblies.ContigBreaker.Subcontig> cur = splitter.subcontigMap.get(s);
@@ -415,19 +423,10 @@ public static void main(String[] args) throws IOException
 }
 
 /*
- * Add a key, value pair to a map from string to list, but initialize list if it's not already there
- */
-static <T> void addInit(HashMap<String, ArrayList<T>> map, String key, T val)
-{
-	if(!map.containsKey(key)) map.put(key, new ArrayList<T>());
-	map.get(key).add(val);
-}
-
-/*
  * Create a Fasta header line for a scaffold based on the names of contigs which make it up
  * format is >contigs1&contig2&... contig1 contig2 contig3 ...
  */
-static String getHeaderLine(ArrayDeque<String> contigs, ContigBreaker splitter)
+static String createHeaderLine(ArrayDeque<String> contigs, ContigBreaker splitter)
 {
 	StringBuilder res = new StringBuilder("");
 	HashSet<String> contigSet = new HashSet<String>();
@@ -470,7 +469,7 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
 			{
 				System.err.println(contigs.peekFirst()+" "+curSeq.length());
 			}
-			if(spa.myContigPrefix) curSeq = Scaffold.reverseComplement(curSeq);
+			if(spa.myContigPrefix) curSeq = ReadUtils.reverseComplement(curSeq);
 			res.append(curSeq);
 		}
 		if(verbose)
@@ -483,7 +482,7 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
 			String readSeq = readMap.get(spa.read);
 			if(!spa.theirContigPrefix)
 			{
-				readSeq = Scaffold.reverseComplement(readSeq);
+				readSeq = ReadUtils.reverseComplement(readSeq);
 			}
 			res.append(readSeq.substring(spa.myReadEnd, spa.theirReadStart));
 		}
@@ -501,112 +500,11 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
 		
 		if(!spa.theirContigPrefix)
 		{
-			curSeq = Scaffold.reverseComplement(curSeq);
+			curSeq = ReadUtils.reverseComplement(curSeq);
 		}
 		res.append(curSeq.substring(overlap));
 	}
 	return res.toString();
-}
-
-/*
- * Gets the best alignment of another contig to follow a given contig
- */
-static ScaffoldGraph.Alignment consensus(String from, ArrayList<ScaffoldGraph.Alignment> als, HashSet<String> usedContigs, HashMap<String, ArrayDeque<ScaffoldGraph.Alignment>> scaffoldEdges, HashMap<String, String> lastToFirst)
-{
-	HashMap<String, ArrayList<ScaffoldGraph.Alignment>> prefEdges = new HashMap<>();
-	HashMap<String, ArrayList<ScaffoldGraph.Alignment>> suffEdges = new HashMap<>();
-	for(ScaffoldGraph.Alignment a : als)
-	{
-		if(a.myContigPrefix)
-		{
-			addInit(prefEdges, a.to, a);
-		}
-		else
-		{
-			addInit(suffEdges, a.to, a);
-		}
-	}
-	ArrayList<ScaffoldGraph.Alignment> best = null;
-	double bestTotalWeight = 0;
-	for(String to : prefEdges.keySet())
-	{
-		// Make sure the destination is on one of the ends of its scaffold
-		if(usedContigs.contains(to) && !scaffoldEdges.containsKey(to) && !lastToFirst.containsKey(to)) continue;
-		
-		// Make sure that the destination isn't the beginning of the scaffold the edge is coming from
-		if(scaffoldEdges.containsKey(to) && scaffoldEdges.get(to).peekLast().to.equals(from)) continue;
-		
-		// Make sure that the destination isn't the end of the scaffold the edge is coming from
-		if(lastToFirst.containsKey(to) && lastToFirst.get(to).equals(from)) continue;
-		
-		ArrayList<ScaffoldGraph.Alignment> al = prefEdges.get(to);
-		ArrayList<ScaffoldGraph.Alignment> valid = new ArrayList<>();
-		double totalWeight = 0;
-		for(ScaffoldGraph.Alignment a : al)
-		{
-			// Make sure this edge doesn't use the same side of the destination as an existing edge
-			if(scaffoldEdges.containsKey(to) && scaffoldEdges.get(to).peekFirst().myContigPrefix == a.theirContigPrefix)
-			{
-				continue;
-			}
-			if(lastToFirst.containsKey(to) && scaffoldEdges.get(lastToFirst.get(to)).peekLast().theirContigPrefix == a.theirContigPrefix)
-			{
-				continue;
-			}
-			
-			totalWeight += a.weight;
-			valid.add(a);
-		}
-		
-		if(best == null || totalWeight > bestTotalWeight)
-		{
-			best = valid;
-			bestTotalWeight = totalWeight;
-		}
-	}
-	for(String to : suffEdges.keySet())
-	{
-		// Make sure the destination is on one of the ends of its scaffold
-		if(usedContigs.contains(to) && !scaffoldEdges.containsKey(to) && !lastToFirst.containsKey(to)) continue;
-				
-		// Make sure that the destination isn't the beginning of the scaffold the edge is coming from
-		if(scaffoldEdges.containsKey(to) && scaffoldEdges.get(to).peekLast().to.equals(from)) continue;
-				
-		// Make sure that the destination isn't the end of the scaffold the edge is coming from
-		if(lastToFirst.containsKey(to) && lastToFirst.get(to).equals(from)) continue;
-		
-		ArrayList<ScaffoldGraph.Alignment> valid = new ArrayList<>();
-		ArrayList<ScaffoldGraph.Alignment> al = suffEdges.get(to);
-		double totalWeight = 0;
-		for(ScaffoldGraph.Alignment a : al)
-		{
-			// Make sure this edge doesn't use the same side of the destination as an existing edge
-			if(scaffoldEdges.containsKey(to) && scaffoldEdges.get(to).peekFirst().myContigPrefix == a.theirContigPrefix)
-			{
-				continue;
-			}
-			if(lastToFirst.containsKey(to) && scaffoldEdges.get(lastToFirst.get(to)).peekLast().theirContigPrefix == a.theirContigPrefix)
-			{
-				continue;
-			}
-			totalWeight += a.weight;
-			valid.add(a);
-		}
-		if(best == null || totalWeight > bestTotalWeight)
-		{
-			best = valid;
-			bestTotalWeight = totalWeight;
-		}
-	}
-	
-	if(best == null || best.size() == 0) return null;
-	
-	if(best.size() < minReadSupport || bestTotalWeight < minWeightSupport) return null;
-	
-	
-	ScaffoldGraph.Alignment res = best.get(0);
-	
-	return res;
 }
 
 /*
@@ -693,7 +591,7 @@ static boolean[] startEnd(int startPos, int endPos, int length)
 /*
  * Whether or not an alignment contains the start/end of the contig involved
  */
-static boolean[] contigStartEnd(FindUsefulScaffoldingAlignments.PafAlignment pa)
+static boolean[] contigStartEnd(SortablePafAlignment pa)
 {
 	return startEnd(pa.contigStart, pa.contigEnd, pa.contigLength);
 }
@@ -701,7 +599,7 @@ static boolean[] contigStartEnd(FindUsefulScaffoldingAlignments.PafAlignment pa)
 /*
  * Whether or not an alignment contains the start/end of the read involved
  */
-static boolean[] readStartEnd(FindUsefulScaffoldingAlignments.PafAlignment pa)
+static boolean[] readStartEnd(SortablePafAlignment pa)
 {
 	return startEnd(pa.readStart, pa.readEnd, pa.readLength);
 }
@@ -742,7 +640,6 @@ static ArrayList<SortablePafAlignment> compress(ArrayList<SortablePafAlignment> 
 		// Now alignments[i:j) has all the alignments of this contig - combine or remove them
 		boolean[] rse = new boolean[2], cse = new boolean[2];
 		boolean gapFree = true;
-		boolean sameStrand = true;
 		int lastReadEndPosition = alignments.get(i).readEnd;
 		int lastContigEndPosition = alignments.get(i).contigEnd;
 		for(int k = i; k<j; k++)
@@ -751,7 +648,6 @@ static ArrayList<SortablePafAlignment> compress(ArrayList<SortablePafAlignment> 
 			
 			if(k > i && alignments.get(k-1).strand != alignments.get(k).strand)
 			{
-				sameStrand = false;
 				j = k;
 				break;
 			}
@@ -906,10 +802,41 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 /*
  * Alignment of a contig to an ultralong read - sortable by start position in the read 
  */
-static class SortablePafAlignment extends FindUsefulScaffoldingAlignments.PafAlignment implements Comparable<SortablePafAlignment>
+static class SortablePafAlignment implements Comparable<SortablePafAlignment>
 {
-	SortablePafAlignment(String line) {
-		super(line);
+	String readName, contigName;
+	int readLength, readStart, readEnd;
+	int contigLength, contigStart, contigEnd;
+	char strand;
+	String line;
+	// Call with a second parameter to denote that read and contig were flipped when calling minimap2
+	SortablePafAlignment(String line, int backwards)
+	{
+		this.line = line;
+		String[] ss = line.split("\t");
+		contigName = ss[0];
+		contigLength = Integer.parseInt(ss[1]);
+		contigStart = Integer.parseInt(ss[2]);
+		contigEnd = Integer.parseInt(ss[3]);
+		strand = ss[4].charAt(0);
+		readName = ss[5];
+		readLength = Integer.parseInt(ss[6]);
+		readStart = Integer.parseInt(ss[7]);
+		readEnd = Integer.parseInt(ss[8]);
+	}
+	SortablePafAlignment(String line)
+	{
+		this.line = line;
+		String[] ss = line.split("\t");
+		readName = ss[0];
+		readLength = Integer.parseInt(ss[1]);
+		readStart = Integer.parseInt(ss[2]);
+		readEnd = Integer.parseInt(ss[3]);
+		strand = ss[4].charAt(0);
+		contigName = ss[5];
+		contigLength = Integer.parseInt(ss[6]);
+		contigStart = Integer.parseInt(ss[7]);
+		contigEnd = Integer.parseInt(ss[8]);
 	}
 
 	public int compareTo(SortablePafAlignment o) {

@@ -11,12 +11,12 @@ public class Align {
 		String s = lastSeq;
 		if(lastReversed)
 		{
-			s = Scaffold.reverseComplement(s);
+			s = ReadUtils.reverseComplement(s);
 		}
 		String t = curSeq;
 		if(curReversed)
 		{
-			t = Scaffold.reverseComplement(t);
+			t = ReadUtils.reverseComplement(t);
 		}
 		
 		return t.substring(overlap);

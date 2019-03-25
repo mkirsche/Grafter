@@ -6,6 +6,7 @@ import java.io.*;
 public class StitchFasta {
 public static void main(String[] args) throws IOException
 {
+	System.err.println("Replacing contigs in assembly file with their contigs");
 	String fastaFn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/paternal_and_unknown.contigs.mmpoa.fa";
 	String extraFastaFn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/paternal_newcontigs.fa";
 	String outfn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/paternal_and_unknown.contigs.mmpoa.scaffolds.fa";
@@ -22,6 +23,9 @@ public static void main(String[] args) throws IOException
 	HashSet<String> used = new HashSet<String>();
 	
 	BufferedReader br = new BufferedReader(new FileReader(new File(extraFastaFn)));
+	
+	ArrayList<Integer> contigLengths = new ArrayList<Integer>();
+	long totLength = 0;
 	
 	while(true)
 	{
@@ -41,7 +45,10 @@ public static void main(String[] args) throws IOException
 			{
 				used.add(sc);
 				
-				// Handle contigs which were broken in a previous run
+				/*
+				 * Handle contigs which were broken in a previous run
+				 * This will occur if the contigs are realigned after being broken in misassembly correction
+				 */
 				if(sc.indexOf('_') != -1)
 				{
 					used.add(sc.substring(0, sc.lastIndexOf('_')));
@@ -49,6 +56,8 @@ public static void main(String[] args) throws IOException
 			}
 			String contig = br.readLine();
 			out.println(">" + name);
+			contigLengths.add(contig.length());
+			totLength += contig.length();
 			printContig(out, contig);
 		} catch(Exception e) {
 			break;
@@ -57,6 +66,7 @@ public static void main(String[] args) throws IOException
 	
 	br = new BufferedReader(new FileReader(new File(fastaFn)));
 	boolean print = false;
+	int curLength = 0;
 	while(true)
 	{
 		try {
@@ -64,6 +74,12 @@ public static void main(String[] args) throws IOException
 			if(line.length() == 0) continue;
 			if(line.charAt(0) == '>')
 			{
+				if(print)
+				{
+					totLength += curLength;
+					contigLengths.add(curLength);
+				}
+				curLength = 0;
 				String name = line.substring(1).split(" ")[0];
 				if(used.contains(name))
 				{
@@ -77,6 +93,7 @@ public static void main(String[] args) throws IOException
 			}
 			else
 			{
+				curLength += line.length();
 				if(print) out.println(line);
 			}
 		} catch(Exception e) {
@@ -84,7 +101,13 @@ public static void main(String[] args) throws IOException
 		}
 	}
 	out.close();
+	
+	ReadUtils.assemblyStats(contigLengths, totLength);
 }
+
+/*
+ * Prints out a contig with 80 characters per line
+ */
 static void printContig(PrintWriter out, String contig)
 {
 	int n = contig.length();
