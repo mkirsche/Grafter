@@ -6,7 +6,7 @@ import java.io.*;
 public class StitchFasta {
 public static void main(String[] args) throws IOException
 {
-	System.err.println("Replacing contigs in assembly file with their contigs");
+	System.err.println("Replacing contigs in assembly file with their scaffolds");
 	String fastaFn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/paternal_and_unknown.contigs.mmpoa.fa";
 	String extraFastaFn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/paternal_newcontigs.fa";
 	String outfn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/paternal_and_unknown.contigs.mmpoa.scaffolds.fa";
