@@ -230,7 +230,7 @@ static boolean check(NovelAdjacency na, HashMap<String, ArrayList<IncludeContain
 		}
 	}
 	//System.out.println(na.contig1+" "+na.contig2+" "+na.weight+" "+na.pos1+" "+na.pos2+" "+evidence);
-	return evidence < maxEvidence && evidence * evidenceRatio < na.weight || (na.contig1.equals(na.contig2) && evidence * evidenceRatio < na.weight);
+	return evidence < maxEvidence && (evidence * evidenceRatio < na.weight || (na.contig1.equals(na.contig2) && evidence * evidenceRatio < na.weight));
 }
 
 /*
