@@ -6,7 +6,7 @@ BINDIR=`dirname $(readlink -f "$0")`
 len=100
 prop=$2
 
-readfn='/scratch/groups/mschatz1/mkirsche/ultralong/ccs/maternal_and_unknown.contigs.mmpoa.fa /scratch/groups/mschatz1/mkirsche/ultralong/rel2_i'$len'kplus.fastq'
+readfn='/scratch/groups/mschatz1/mkirsche/ultralong/ccs/maternal_and_unknown.contigs.mmpoa.fa /scratch/groups/mschatz1/mkirsche/ultralong/rel2_'$len'kplus.fastq'
 
 javac scaffolding/Downsample.java
 java -cp $BINDIR scaffolding.Downsample $readfn $prop > $OUTDIR'/filteredreads.fastq'
