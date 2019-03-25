@@ -8,8 +8,7 @@ prop=$2
 
 readfn='/scratch/groups/mschatz1/mkirsche/ultralong/rel2_'$len'kplus.fastq'
 
-javac scaffolding/Downsample.java
-java -cp $BINDIR scaffolding.Downsample $readfn $prop > $OUTDIR'/filteredreads.fastq'
+/scratch/groups/mschatz1/mkirsche/github/seqtk/seqtk scaffolding.Downsample $readfn $prop > $OUTDIR'/filteredreads.fastq'
 
 $BINDIR/run2.sh /scratch/groups/mschatz1/mkirsche/ultralong/ccs/maternal_and_unknown.contigs.mmpoa.fa $OUTDIR'/filteredreads.fastq'  '/scratch/groups/mschatz1/mkirsche/ultralong/ccs/rel2_'$len'kplus_ccs_mat.paf' $OUTDIR/maternal_and_unknown.contigs.mmpoa.scaffoldsgraph.fa 1 $OUTDIR 2>&1 | tee $OUTDIR'/'maternal.log
 
