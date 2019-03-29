@@ -25,7 +25,7 @@ public class CorrectMisassemblies {
 	static double evidenceRatio = 3.5; // Value is 1.5 for full data
 	
 	// The maximum total evidence which can go against a misassembly and still have it be considered
-	static double maxEvidence = 300000;
+	static double maxEvidence = 450000 / evidenceRatio;
 	
 	// The minimum weight of an alignment for it to be considered a piece of evidence towards a misassembly
 	static double minSingleAlignmentWeight = 20000;
