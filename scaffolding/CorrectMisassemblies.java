@@ -22,7 +22,7 @@ public class CorrectMisassemblies {
 	static int buffer = 50000;
 	
 	// The minimum ratio of evidence for vs. against a misassembly to believe it
-	static double evidenceRatio = 1.5;
+	static double evidenceRatio = 2.5;
 	
 	// The maximum total evidence which can go against a misassembly and still have it be considered
 	static double maxEvidence = 300000;
