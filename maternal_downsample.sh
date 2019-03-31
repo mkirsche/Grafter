@@ -3,7 +3,7 @@ OUTDIR=$WORKINGDIR'/'$1
 rm -r $OUTDIR
 mkdir $OUTDIR
 BINDIR=`dirname $(readlink -f "$0")`
-javac $BINDIR'/scaffolding/*.java'
+javac $BINDIR/scaffolding/*.java
 len=100
 prop=$2
 
