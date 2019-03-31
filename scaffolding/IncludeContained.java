@@ -25,6 +25,7 @@ public static void main(String[] args) throws IOException
 	 * File names for testing locally
 	 */
 	String pafFn = "/home/mkirsche/eclipse-workspace/Ultralong/rel2_200kplus_ccs_mat.paf";
+	pafFn = "/home/mkirsche/eclipse-workspace/Ultralong/alignments.paf";
 	//String pafFn = "brokenmaternal.paf";
 	String fastaFn = "/home/mkirsche/eclipse-workspace/Ultralong/maternal_and_unknown.contigs.mmpoa.fa";
 	//String fastaFn = "maternal_and_unknown.contigs.mmpoa.intra.chimera.broken.fa";

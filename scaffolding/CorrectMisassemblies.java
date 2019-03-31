@@ -22,13 +22,18 @@ public class CorrectMisassemblies {
 	static int buffer = 50000;
 	
 	// The minimum ratio of evidence for vs. against a misassembly to believe it
-	static double evidenceRatio = 3.5; // Value is 1.5 for full data
+	static double evidenceRatio = 2; // Value is 1.5 for full data
 	
 	// The maximum total evidence which can go against a misassembly and still have it be considered
 	static double maxEvidence = 450000 / evidenceRatio;
 	
 	// The minimum weight of an alignment for it to be considered a piece of evidence towards a misassembly
 	static double minSingleAlignmentWeight = 20000;
+	
+	// The number of reads which must support a misassembly
+	static int minInversionSupport = 1;
+	static int minChimeraSupport = 2;
+	static int minSplitSupport = 5; // Higher because only requires one endpoint
 	
 /*
  * Finds inversions based on alignments of contigs to ultralong reads
@@ -78,7 +83,7 @@ static ArrayList<NovelAdjacency> findInversions(ArrayList<IncludeContained.Sorta
 					boolean lastPrefix = last.strand == '-';
 					boolean curPrefix = cur.strand == '+';
 					res.add(new NovelAdjacency(last.contigName, cur.contigName, lastPrefix ? last.contigStart : last.contigEnd, 
-						curPrefix ? cur.contigStart : cur.contigEnd, last.contigLength, cur.contigLength, last.readName, weight));
+						curPrefix ? cur.contigStart : cur.contigEnd, last.contigLength, cur.contigLength, last.readName, weight, 0));
 				}
 			}
 		}
@@ -132,7 +137,7 @@ static ArrayList<NovelAdjacency> findChimeras(ArrayList<IncludeContained.Sortabl
 		{
 			res.add(new NovelAdjacency(last.contigName, cur.contigName, lastPrefix ? last.contigStart : last.contigEnd, 
 					curPrefix ? cur.contigStart : cur.contigEnd, last.contigLength, cur.contigLength, last.readName, 
-					harmonicMean(last.contigEnd - last.contigStart, cur.contigEnd - cur.contigStart)));
+					harmonicMean(last.contigEnd - last.contigStart, cur.contigEnd - cur.contigStart), 1));
 		}
 		
 		last = cur;
@@ -202,7 +207,7 @@ static ArrayList<NovelAdjacency> findSplitAlignments(HashMap<String, ArrayList<I
 			}
 			NovelAdjacency toAdd =(new NovelAdjacency(contigName, contigName, endpoint, endpoint, 
 					als.get(0).contigLength, als.get(0).contigLength, readSupport.get(endpoint), 
-					endpointWeights.get(endpoint)));
+					endpointWeights.get(endpoint), 2));
 			toAdd.support = endpointFrequency.get(endpoint);
 			res.add(toAdd);
 		}
@@ -216,7 +221,7 @@ static boolean check(NovelAdjacency na, HashMap<String, ArrayList<IncludeContain
 	ArrayList<IncludeContained.SortablePafAlignment> contig1aln = byContig.get(na.contig1);
 	for(IncludeContained.SortablePafAlignment spa : contig1aln)
 	{
-		if(spa.contigStart < na.pos1 && spa.contigEnd > na.pos1)
+		if(spa.contigStart < na.pos1 - 10000 && spa.contigEnd > na.pos1 + 10000)
 		{
 			evidence += harmonicMean(na.pos1 - spa.contigStart, spa.contigEnd - na.pos1);
 		}
@@ -229,7 +234,7 @@ static boolean check(NovelAdjacency na, HashMap<String, ArrayList<IncludeContain
 			evidence += harmonicMean(na.pos2 - spa.contigStart, spa.contigEnd - na.pos2);
 		}
 	}
-	//System.out.println(na.contig1+" "+na.contig2+" "+na.weight+" "+na.pos1+" "+na.pos2+" "+evidence);
+	System.out.println(na.contig1+" "+na.contig2+" "+na.weight+" "+na.pos1+" "+na.pos2+" "+evidence);
 	return evidence < maxEvidence && (evidence * evidenceRatio < na.weight || (na.contig1.equals(na.contig2) && evidence * evidenceRatio < na.weight));
 }
 
@@ -258,11 +263,17 @@ static ArrayList<NovelAdjacency> compressAndFilter(ArrayList<NovelAdjacency> nas
 			cur.pos2 = (int)(cur.pos2 * (j-i) + next.pos2) / (j - i + 1);
 			j++;
 		}
+		boolean hasSupport = (cur.type == 0 && totSupport >= minInversionSupport) ||
+				(cur.type == 1 && totSupport >= minChimeraSupport) || cur.type == 2;
+		if(cur.contig1.equals("tig00084452"))
+		{
+			System.out.println(cur.weight+" "+hasSupport);
+		}
 		if(!filter || (cur.weight > 20000 && j >= i+3 && check(cur, byContig)))
 		{
 			res.add(cur);
 		}
-		else if(totSupport >= 5 && check(cur, byContig))
+		else if(hasSupport && check(cur, byContig))
 		{
 			res.add(cur);
 		}
@@ -335,10 +346,13 @@ static class NovelAdjacency implements Comparable<NovelAdjacency>
 	// The weight of the misassembly giving some measure of the amount of evidence supportingits presence
 	double weight;
 	
+	// 0 is inversion, 1 is chimera, 2 is split
+	int type;
+	
 	// Whether or not the prefix of each contig is involved in the misassembly
 	int length1, length2;
 	int support;
-	NovelAdjacency(String c1, String c2, int p1, int p2, int l1, int l2, String rr, double ww)
+	NovelAdjacency(String c1, String c2, int p1, int p2, int l1, int l2, String rr, double ww, int tt)
 	{
 		support = 1;
 		contig1 = c1;
@@ -349,6 +363,7 @@ static class NovelAdjacency implements Comparable<NovelAdjacency>
 		length2 = l2;
 		read = rr;
 		weight = ww;
+		type = tt;
 		if(contig1.compareTo(contig2) > 0 || (contig1.equals(contig2) && pos1 > pos2))
 		{
 			String tmp = contig1;
@@ -366,7 +381,7 @@ static class NovelAdjacency implements Comparable<NovelAdjacency>
 	{
 		return "Novel adjacency: " + contig1 + " " + pos1 + " " + length1 + " " 
 				+ contig2 + " " + pos2 + " " + length2 + " " + read + " "
-				+ weight;
+				+ weight + " " + type;
 	}
 	@Override
 	public int compareTo(NovelAdjacency o) {
