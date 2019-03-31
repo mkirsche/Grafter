@@ -2,7 +2,117 @@ package scaffolding;
 
 import java.util.*;
 
+import scaffolding.ScaffoldGraph.Alignment;
+
 public class ScaffoldGraphBuilder {
+	
+	static boolean stillValid(ScaffoldGraph.Alignment sga, ScaffoldGraph.Scaffolding curScaffolds, HashMap<String, String> lastToFirst)
+	{
+		HashSet<String> usedContigs = curScaffolds.usedContigs;
+		HashMap<String, ArrayDeque<Alignment>> scaffoldEdges = curScaffolds.scaffoldEdges;
+		String to = sga.to;
+		String from = sga.from;
+		
+		// Make sure from is end of its scaffold
+		if(usedContigs.contains(from) && !lastToFirst.containsKey(from))
+		{
+			return false;
+		}
+		
+		// Make sure the destination is on one of the ends of its scaffold
+		if(usedContigs.contains(to) && !scaffoldEdges.containsKey(to) && !lastToFirst.containsKey(to))
+		{
+			return false;
+		}
+					
+		// Make sure that the destination isn't the beginning of the scaffold the edge is coming from
+		if(scaffoldEdges.containsKey(to) && scaffoldEdges.get(to).peekLast().to.equals(from))
+		{
+			return false;
+		}
+					
+		// Make sure that the destination isn't the end of the scaffold the edge is coming from
+		if(lastToFirst.containsKey(to) && lastToFirst.get(to).equals(from))
+		{
+			return false;
+		}
+		
+		// Make sure this edge doesn't use the same side of the destination as an existing edge
+		if(scaffoldEdges.containsKey(to) && scaffoldEdges.get(to).peekFirst().myContigPrefix == sga.theirContigPrefix)
+		{
+			return false;
+		}
+		if(lastToFirst.containsKey(to) && scaffoldEdges.get(lastToFirst.get(to)).peekLast().theirContigPrefix == sga.theirContigPrefix)
+		{
+			return false;
+		}
+		return true;
+	}
+	
+	static PriorityQueue<ScaffoldGraph.Alignment> getAllSortedEdges(ScaffoldGraph sg)
+	{
+		PriorityQueue<ScaffoldGraph.Alignment> res = new PriorityQueue<>();
+		for(String s : sg.adj.keySet())
+		{
+			for(int strand = 0; strand < 2; strand++)
+			{
+				ArrayList<ScaffoldGraph.Alignment> als = sg.adj.get(s)[strand];
+				HashMap<String, ArrayList<ScaffoldGraph.Alignment>> prefEdges = new HashMap<>();
+				HashMap<String, ArrayList<ScaffoldGraph.Alignment>> suffEdges = new HashMap<>();
+				for(ScaffoldGraph.Alignment a : als)
+				{
+					if(a.myContigPrefix)
+					{
+						ReadUtils.addInit(prefEdges, a.to, a);
+					}
+					else
+					{
+						ReadUtils.addInit(suffEdges, a.to, a);
+					}
+				}
+				
+				for(String to : prefEdges.keySet())
+				{
+					ArrayList<ScaffoldGraph.Alignment> al = prefEdges.get(to);
+					ArrayList<ScaffoldGraph.Alignment> valid = new ArrayList<>();
+					double totalWeight = 0;
+					for(ScaffoldGraph.Alignment a : al)
+					{
+						totalWeight += a.weight;
+						valid.add(a);
+					}
+					
+					if(valid.size() > 0)
+					{
+						ScaffoldGraph.Alignment toAdd = valid.get(0);
+						toAdd.from = s;
+						toAdd.weight = totalWeight;
+						res.add(toAdd);
+					}
+					
+				}
+				for(String to : suffEdges.keySet())
+				{
+					ArrayList<ScaffoldGraph.Alignment> valid = new ArrayList<>();
+					ArrayList<ScaffoldGraph.Alignment> al = suffEdges.get(to);
+					double totalWeight = 0;
+					for(ScaffoldGraph.Alignment a : al)
+					{
+						totalWeight += a.weight;
+						valid.add(a);
+					}
+					if(valid.size() > 0)
+					{
+						ScaffoldGraph.Alignment toAdd = valid.get(0);
+						toAdd.from = s;
+						toAdd.weight = totalWeight;
+						res.add(toAdd);
+					}
+				}
+			}
+		}
+		return res;
+	}
 	/*
 	 * Gets the best alignment of another contig to follow a given contig
 	 */

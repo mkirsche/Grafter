@@ -234,7 +234,7 @@ static boolean check(NovelAdjacency na, HashMap<String, ArrayList<IncludeContain
 			evidence += harmonicMean(na.pos2 - spa.contigStart, spa.contigEnd - na.pos2);
 		}
 	}
-	System.out.println(na.contig1+" "+na.contig2+" "+na.weight+" "+na.pos1+" "+na.pos2+" "+evidence);
+	//System.out.println(na.contig1+" "+na.contig2+" "+na.weight+" "+na.pos1+" "+na.pos2+" "+evidence);
 	return evidence < maxEvidence && (evidence * evidenceRatio < na.weight || (na.contig1.equals(na.contig2) && evidence * evidenceRatio < na.weight));
 }
 
@@ -265,10 +265,6 @@ static ArrayList<NovelAdjacency> compressAndFilter(ArrayList<NovelAdjacency> nas
 		}
 		boolean hasSupport = (cur.type == 0 && totSupport >= minInversionSupport) ||
 				(cur.type == 1 && totSupport >= minChimeraSupport) || cur.type == 2;
-		if(cur.contig1.equals("tig00084452"))
-		{
-			System.out.println(cur.weight+" "+hasSupport);
-		}
 		if(!filter || (cur.weight > 20000 && j >= i+3 && check(cur, byContig)))
 		{
 			res.add(cur);
