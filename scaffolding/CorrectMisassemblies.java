@@ -19,7 +19,7 @@ import scaffolding.IncludeContained.SortablePafAlignment;
 public class CorrectMisassemblies {
 	
 	// How far away misassemblies must be from the end of a contig to be worth breaking
-	static int buffer = 50000;
+	static int buffer = 25000;
 	
 	// The minimum ratio of evidence for vs. against a misassembly to believe it
 	static double evidenceRatio = 2; // Value is 1.5 for full data
@@ -485,11 +485,24 @@ static class ContigBreaker
 		}
 		return null;
 	}
+	static ArrayList<Integer> filterBreaks(ArrayList<Integer> breaks)
+	{
+		ArrayList<Integer> res = new ArrayList<>();
+		for(int i = 0; i < breaks.size(); i++)
+		{
+			if(i == 0 || breaks.get(i) > breaks.get(i-1) + buffer)
+			{
+				res.add(breaks.get(i));
+			}
+		}
+		return res;
+	}
 	ArrayList<Subcontig> destroy(String contigName, ArrayList<Integer> breakPositions)
 	{
 		ArrayList<Subcontig> res = new ArrayList<>();
 		Collections.sort(breakPositions);
 		res.add(new Subcontig(0, breakPositions.get(0), contigName + "_" + 1, contigName));
+		
 		for(int i = 0; i<breakPositions.size(); i++)
 		{
 			int startPos = breakPositions.get(i);
