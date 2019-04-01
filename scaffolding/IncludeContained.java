@@ -10,7 +10,7 @@ public class IncludeContained {
 	
 	// The number of reads required to support the joining of two contigs
 	static int minReadSupport = 1;
-	static double minWeightSupport = 25000;
+	static double minWeightSupport = 15000;
 	
 	static double maxHangingProportion = 0.02;
 	static int maxHanging = 250;
