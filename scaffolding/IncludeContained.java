@@ -121,6 +121,9 @@ public static void main(String[] args) throws IOException
 	HashSet<String> contigNames = new HashSet<>();
 	
 	CorrectMisassemblies.ContigBreaker splitter = new CorrectMisassemblies.ContigBreaker(corrections, contigNames);
+	
+	System.err.println("Number of breaks: " + splitter.numBreaks);
+	
 	alignmentsPerRead = CorrectMisassemblies.remapAll(splitter, alignmentsPerRead);
 	
 	/*

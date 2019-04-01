@@ -413,6 +413,7 @@ static class ContigBreaker
 	HashMap<String, Integer> lengthMap;
 	HashMap<String, String> sequenceMap;
 	HashMap<String, String> sourceMap;
+	int numBreaks;
 	ContigBreaker(ArrayList<NovelAdjacency> nas, HashSet<String> contigNames)
 	{
 		subcontigMap = new HashMap<>();
@@ -437,10 +438,12 @@ static class ContigBreaker
 				lengthMap.put(na.contig2, na.length2);
 			}
 		}
+		numBreaks = 0;
 		for(String contigName : breakPositionMap.keySet())
 		{
 			contigNames.add(contigName);
 			ArrayList<Subcontig> scs = destroy(contigName, breakPositionMap.get(contigName));
+			numBreaks += scs.size() - 1;
 			for(Subcontig sc : scs)
 			{
 				sourceMap.put(sc.name, contigName);
