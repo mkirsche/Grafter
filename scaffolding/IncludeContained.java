@@ -224,6 +224,17 @@ public static void main(String[] args) throws IOException
 		}
 	}
 	
+	contigMap.put("undosplit", "A");
+	for(String s : splitter.subcontigMap.keySet())
+	{
+		ArrayList<CorrectMisassemblies.ContigBreaker.Subcontig> subs = splitter.subcontigMap.get(s);
+		int numSubcontigs = subs.size();
+		for(int i = 0; i<numSubcontigs-1; i++)
+		{
+			sg.addEdge(subs.get(i).name, subs.get(i+1).name, "undosplit", 0, 0, 0, false, true, 1);
+		}
+	}
+	
 	ScaffoldGraph.Scaffolding results = sg.globalScaffolding();
 	HashMap<String, ArrayDeque<String>> scaffoldContigs = results.scaffoldContigs;
 	HashMap<String, ArrayDeque<ScaffoldGraph.Alignment>> scaffoldEdges = results.scaffoldEdges;
@@ -411,7 +422,7 @@ static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als)
 		if(last != null && !last.contigName.equals(spa.contigName))
 		{
 			int overlap = last.readEnd - spa.readStart;
-			if(overlap <= spa.contigLength && overlap <= last.contigLength && overlap <= MAX_GAP)
+			if(overlap <= spa.contigLength && overlap <= last.contigLength)
 			{
 				double lastLength = last.contigEnd - last.contigStart;
 				double curLength = spa.contigEnd - spa.contigStart;
