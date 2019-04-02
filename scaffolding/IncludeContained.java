@@ -34,6 +34,9 @@ public static void main(String[] args) throws IOException
 	String outFn = "/home/mkirsche/eclipse-workspace/Ultralong/new_contigs.fa";
 	String brokenOutputFile = fastaFn + ".broken";
 	
+	pafFn = "alignments.paf";
+	readFn  = "filteredreads.fastq";
+	
 	/*String pafFn = "AssemblyToMaternal.paf";
 	String fastaFn = "maternal_and_unknown.contigs.mmpoa.fa";
 	String readFn = "rel2wt_50kplus.ctg.fa";
