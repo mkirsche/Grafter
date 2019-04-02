@@ -7,6 +7,7 @@ public class GroundTruthFromAlignments {
 @SuppressWarnings("resource")
 public static void main(String[] args) throws IOException
 {
+	PrintWriter out = new PrintWriter(new File("debug.txt"));
 	String fn = "maternaltoref.paf";
 	
 	if(args.length > 0)
@@ -79,8 +80,6 @@ public static void main(String[] args) throws IOException
 		chrMap.get(cur.chrName).mappings.add(cur);
 	}
 	
-	PrintWriter out = new PrintWriter(System.out);
-	
 	int joins = 0;
 	
 	HashMap<String, String> contigToChr = new HashMap<>();
@@ -111,7 +110,7 @@ public static void main(String[] args) throws IOException
 	
 	input = new Scanner(new FileInputStream(new File(newContigsFn)));
 	
-	HashMap<String, String> contigToScaffold = new HashMap<>();
+	HashMap<String, HashSet<String>> contigToScaffold = new HashMap<>();
 	
 	int chimeras = 0;
 	
@@ -131,8 +130,8 @@ public static void main(String[] args) throws IOException
 			String chrA = contigToChr.get(line[i]);
 			String chrB = contigToChr.get(line[i+1]);
 			
-			contigToScaffold.put(line[i], line[0].substring(1));
-			contigToScaffold.put(line[i+1], line[0].substring(1));
+			AlignmentIndex.addInit(contigToScaffold, line[i], line[0].substring(1));
+			AlignmentIndex.addInit(contigToScaffold, line[i+1], line[0].substring(1));
 			
 			if(chrA == null || chrB == null)
 			{
@@ -151,17 +150,19 @@ public static void main(String[] args) throws IOException
 	
 	String pafFn = "alignments.paf";
 	
-	System.out.println("Chimera joins: " + chimeras);
-	
 	System.out.println("Building alignment index");
 	
 	AlignmentIndex ai = new AlignmentIndex(pafFn);
 	
 	for(Misjoin mj : misjoins)
 	{
-		System.out.println(contigToScaffold.get(mj.c1));
-		ai.debugPrint(mj.c1, mj.c2);
+		out.println(AlignmentIndex.intersect(contigToScaffold.get(mj.c1), contigToScaffold.get(mj.c2)));
+		out.println(contigToChr.get(mj.c1)+" "+contigToChr.get(mj.c2));
+		out.println(contigToLength.get(mj.c1)+" "+contigToLength.get(mj.c2));
+		ai.debugPrint(out, mj.c1, mj.c2);
 	}
+	
+	System.out.println("Chimera joins: " + chimeras);
 	
 	out.close();
 }
@@ -209,6 +210,7 @@ static class AlignmentIndex
 	ArrayList<String> contigs;
 	ArrayList<String> lines;
 	int n;
+	@SuppressWarnings("resource")
 	AlignmentIndex(String fn) throws IOException
 	{
 		readToAlignments = new HashMap<>();
@@ -262,16 +264,16 @@ static class AlignmentIndex
 		}
 		return res;
 	}
-	void printAlignmentsFromRead(String readName)
+	void printAlignmentsFromRead(PrintWriter out, String readName)
 	{
-		System.out.println("Alignments for " + readName + ":");
+		out.println("Alignments for " + readName + ":");
 		HashSet<Integer> alignments = readToAlignments.get(readName);
 		ArrayList<Integer> toPrint = new ArrayList<>();
 		toPrint.addAll(alignments);
 		Collections.sort(toPrint, compareAlignmentsByField(3, true, false));
 		for(int x : toPrint)
 		{
-			System.out.println(lines.get(x));
+			out.println(lines.get(x));
 		}
 	}
 	Comparator<Integer> compareAlignmentsByField(int i, boolean intCompare, boolean reverse)
@@ -295,17 +297,17 @@ static class AlignmentIndex
 				}
 			}};
 	}
-	void debugPrint(String c1, String c2)
+	void debugPrint(PrintWriter out, String c1, String c2)
 	{
-		System.out.println("Alignments including " + c1 + " and " + c2);
+		out.println("Alignments including " + c1 + " and " + c2);
 		HashSet<String> c1Reads = alnsToReads(contigToAlignments.get(c1));
 		HashSet<String> c2Reads = alnsToReads(contigToAlignments.get(c2));
 		HashSet<String> intersection = intersect(c1Reads, c2Reads);
 		for(String x : intersection)
 		{
-			printAlignmentsFromRead(x);
+			printAlignmentsFromRead(out, x);
 		}
-		System.out.println();
+		out.println();
 	}
 }
 static class Mapping implements Comparable<Mapping>

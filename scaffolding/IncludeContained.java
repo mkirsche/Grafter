@@ -643,6 +643,15 @@ static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<Sor
 			}
 			cur.clear();
 		}
+		else if(cur.size() >= 1 && cur.get(cur.size() - 1).readEnd + 100000 < a.readStart)
+		{
+			if(cur.size() >= 2)
+			{
+				res.add((ArrayList<SortablePafAlignment>) cur.clone());
+			}
+			cur.clear();
+			cur.add(a);
+		}
 		else
 		{
 			// Valid continuation of chain
