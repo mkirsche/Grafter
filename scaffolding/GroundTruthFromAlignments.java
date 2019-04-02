@@ -65,8 +65,6 @@ public static void main(String[] args) throws IOException
 			chrMap.put(chrName, new Chromosome(chrName));
 		}
 		
-		//System.out.println(contigLength); 
-		
 		int oldLength = contigNameToMapping.containsKey(contigName) ? contigNameToMapping.get(contigName).contigLength : 0;
 		
 		if(contigLength > oldLength)
@@ -113,6 +111,8 @@ public static void main(String[] args) throws IOException
 	
 	input = new Scanner(new FileInputStream(new File(newContigsFn)));
 	
+	HashMap<String, String> contigToScaffold = new HashMap<>();
+	
 	int chimeras = 0;
 	
 	HashSet<Misjoin> misjoins = new HashSet<>();
@@ -130,6 +130,9 @@ public static void main(String[] args) throws IOException
 		{
 			String chrA = contigToChr.get(line[i]);
 			String chrB = contigToChr.get(line[i+1]);
+			
+			contigToScaffold.put(line[i], line[0].substring(1));
+			contigToScaffold.put(line[i+1], line[0].substring(1));
 			
 			if(chrA == null || chrB == null)
 			{
@@ -156,6 +159,7 @@ public static void main(String[] args) throws IOException
 	
 	for(Misjoin mj : misjoins)
 	{
+		System.out.println(contigToScaffold.get(mj.c1));
 		ai.debugPrint(mj.c1, mj.c2);
 	}
 	
