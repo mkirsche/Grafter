@@ -480,22 +480,27 @@ static class ContigBreaker
 			if(afterStart && beforeEnd)
 			{
 				res.contigName = sc.name;
-				res.contigStart = Math.max(1, old.contigStart - sc.startPos);
-				res.contigEnd = Math.min(sc.endPos, old.contigEnd) - sc.startPos;
 				res.contigLength = sc.endPos - sc.startPos;
+				res.contigStart = Math.min(res.contigLength, Math.max(1, old.contigStart - sc.startPos));
+				res.contigEnd = Math.min(sc.endPos, old.contigEnd) - sc.startPos;
 				return res;
 			}
 		}
 		return null;
 	}
-	static ArrayList<Integer> filterBreaks(ArrayList<Integer> breaks)
+	static ArrayList<Integer> filterBreaks(ArrayList<Integer> breaks, int length)
 	{
 		ArrayList<Integer> res = new ArrayList<>();
 		for(int i = 0; i < breaks.size(); i++)
 		{
-			if(i == 0 || breaks.get(i) > breaks.get(i-1) + buffer)
+			int cur = breaks.get(i);
+			if(cur > length)
 			{
-				res.add(breaks.get(i));
+				cur = length;
+			}
+			if(i == 0 || cur > breaks.get(i-1) + buffer)
+			{
+				res.add(cur);
 			}
 		}
 		return res;
@@ -504,6 +509,7 @@ static class ContigBreaker
 	{
 		ArrayList<Subcontig> res = new ArrayList<>();
 		Collections.sort(breakPositions);
+		breakPositions = filterBreaks(breakPositions, lengthMap.get(contigName));
 		res.add(new Subcontig(0, breakPositions.get(0), contigName + "_" + 1, contigName));
 		
 		for(int i = 0; i<breakPositions.size(); i++)

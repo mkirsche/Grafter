@@ -23,6 +23,9 @@ public static void main(String[] args) throws IOException
 	
 	HashMap<String, Integer> contigToLength = new HashMap<>();
 	
+	HashSet<String> contigsWithForward = new HashSet<>();
+	HashSet<String> contigsWithBackward = new HashSet<>();
+	
 	while(input.hasNext())
 	{
 		String[] line = input.nextLine().split("\t");
@@ -59,6 +62,15 @@ public static void main(String[] args) throws IOException
 		if(!primary)
 		{
 			continue;
+		}
+		
+		if(rev)
+		{
+			contigsWithBackward.add(contigName);
+		}
+		else
+		{
+			contigsWithForward.add(contigName);
 		}
 		
 		if(!chrMap.containsKey(chrName))
@@ -166,13 +178,21 @@ public static void main(String[] args) throws IOException
 			{
 				continue;
 			}
+			if(contigsWithForward.contains(line[2*i]) && contigsWithBackward.contains(line[2*i]))
+			{
+				continue;
+			}
+			if(contigsWithForward.contains(line[2*i+2]) && contigsWithBackward.contains(line[2*i+2]))
+			{
+				continue;
+			}
 			boolean rev1 = contigNameToMapping.get(line[2*i+0]).reversed;
 			boolean rev2 = contigNameToMapping.get(line[2*i+2]).reversed;
 			if((rev1 == rev2) != (line[2*i+1].equals(line[2*i+3])))
 			{
 				inversions++;
 				misjoins.add(new Misjoin(line[2*i], line[2*i+2], "inversion"));
-				System.out.println("Inversion: " + line[i] + " (length " + contigToLength.get(line[i]) + ") on " 
+				System.out.println("Inversion: " + line[2*i] + " (length " + contigToLength.get(line[2*i]) + ") on " 
 						+ contigToChr.get(line[2*i]) +" to "+line[2*i+2]+ " (length " 
 						+ contigToLength.get(line[2*i+2]) + ") on "+contigToChr.get(line[2*i+2]));
 			}

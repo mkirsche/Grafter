@@ -195,6 +195,7 @@ public static void main(String[] args) throws IOException
 		contigMap = ReadUtils.getFastaMap(fastaFn, contigNames);
 		ReadUtils.writeMap(contigMapFile, contigMap);
 	}
+	
 	if(verbose)
 	{
 		System.err.println("Split contigs:\n" +splitter.subcontigMap.keySet());
@@ -214,6 +215,21 @@ public static void main(String[] args) throws IOException
 		contigMap.put(splitContigName, splitter.sequenceMap.get(splitContigName));
 	}
 	
+	System.err.println("Initializing frequency map for contig kmers");
+	FreqqyMap freq = new FreqqyMap();
+	
+	System.err.println("Adding contig kmer frequencies");
+	for(String s : contigMap.keySet())
+	{
+		freq.addKmerCount(s, contigMap.get(s));
+	}
+	
+	System.err.println("Indexing contig kmer frequencies");
+	for(String s : contigMap.keySet())
+	{
+		freq.addSumArray(s, contigMap.get(s));
+	}
+	
 	/*
 	 * Add edges to the scaffold graph based on the chains of alignments
 	 */
@@ -225,7 +241,7 @@ public static void main(String[] args) throws IOException
 		ArrayList<ArrayList<SortablePafAlignment>> allChains = chainsPerRead.get(readName);
 		for(ArrayList<SortablePafAlignment> chain : allChains)
 		{
-			addEdges(sg, chain);
+			addEdges(sg, chain, freq);
 		}
 	}
 	
@@ -397,7 +413,7 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
 /*
  * Add edges to a scaffold graph based on a chain of alignments to the same read
  */
-static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als)
+static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als, FreqqyMap freq)
 {
 	SortablePafAlignment last = null;
 	boolean lastReversed = false;
@@ -449,6 +465,11 @@ static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als)
 			}
 		}
 		
+		if(spa.contigStart > spa.contigEnd)
+		{
+			System.out.println("error: "+spa.contigName+" "+spa.contigLength+" "+spa.contigStart+" "+spa.contigEnd);
+		}
+		
 		if(last != null && !last.contigName.equals(spa.contigName))
 		{
 			int overlap = last.readEnd - spa.readStart;
@@ -457,6 +478,10 @@ static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als)
 				double lastLength = last.contigEnd - last.contigStart;
 				double curLength = spa.contigEnd - spa.contigStart;
 				double weight = 2 * lastLength * curLength / (lastLength + curLength);
+				double avgFreq1 = freq.getAverageFrequency(last.contigName, last.contigStart-1, last.contigEnd-1);
+				double avgFreq2 = freq.getAverageFrequency(spa.contigName, spa.contigStart-1, spa.contigEnd-1);
+				weight /= CorrectMisassemblies.harmonicMean(avgFreq1, avgFreq2);
+				System.out.println(avgFreq1+" "+avgFreq2);
 				sg.addEdge(last.contigName, spa.contigName, last.readName, last.readEnd, spa.readStart, spa.readLength, lastReversed, !curReversed, weight);
 			}
 		}
@@ -599,7 +624,7 @@ static ArrayList<SortablePafAlignment> compress(ArrayList<SortablePafAlignment> 
 		else
 		{
 			/*
-			 * Create of all of the alignments by taking earliest start and latest end
+			 * Create consensus of all of the alignments by taking earliest start and latest end
 			 */
 			SortablePafAlignment total = alignments.get(i).copy();
 			for(int k = i+1; k<j; k++)
