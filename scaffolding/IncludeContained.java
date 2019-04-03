@@ -477,11 +477,10 @@ static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als, Freq
 				double avgFreq1 = freq.getAverageFrequency(last.contigName, last.contigStart-1, last.contigEnd-1);
 				double avgFreq2 = freq.getAverageFrequency(spa.contigName, spa.contigStart-1, spa.contigEnd-1);
 				weight /= CorrectMisassemblies.harmonicMean(avgFreq1, avgFreq2);
-				if(weight < minWeight)
+				if(weight >= minWeight)
 				{
-					continue;
+					sg.addEdge(last.contigName, spa.contigName, last.readName, last.readEnd, spa.readStart, spa.readLength, lastReversed, !curReversed, weight);
 				}
-				sg.addEdge(last.contigName, spa.contigName, last.readName, last.readEnd, spa.readStart, spa.readLength, lastReversed, !curReversed, weight);
 			}
 		}
 		
