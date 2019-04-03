@@ -45,11 +45,9 @@ public class FreqqyMap {
 	
 	double getAverageFrequency(String name, int start, int end)
 	{
-		System.out.println(name+" "+contigLengths.get(name)+" "+start+" "+end);
 		long[] csum = contigToFreqSum.get(name);
 		int a = Math.max(0, start - k + 1);
 		int b = Math.min(contigLengths.get(name)-k-1, end);
-		System.out.println(a+" "+b);
 		double totalFreq = csumQuery(csum, b) - csumQuery(csum, a-1);
 		return totalFreq / (b - a + 1);
 	}

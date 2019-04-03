@@ -469,16 +469,20 @@ static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als, Freq
 		if(last != null && !last.contigName.equals(spa.contigName))
 		{
 			int overlap = last.readEnd - spa.readStart;
-			if(overlap <= spa.contigLength && overlap <= last.contigLength)
+			if(overlap <= spa.contigLength && overlap <= last.contigLength 
+					&& overlap < .7 * Math.min(last.readEnd-last.readStart, spa.readEnd - spa.readStart))
 			{
 				double lastLength = last.contigEnd - last.contigStart;
 				double curLength = spa.contigEnd - spa.contigStart;
 				double weight = 2 * lastLength * curLength / (lastLength + curLength);
 				double avgFreq1 = freq.getAverageFrequency(last.contigName, last.contigStart-1, last.contigEnd-1);
 				double avgFreq2 = freq.getAverageFrequency(spa.contigName, spa.contigStart-1, spa.contigEnd-1);
-				weight /= CorrectMisassemblies.harmonicMean(avgFreq1, avgFreq2);
+				double penalty = CorrectMisassemblies.harmonicMean(avgFreq1, avgFreq2);
+				System.out.println("repeat penalty: " + last.contigName+" "+spa.contigName+" "+penalty);
+				weight /= penalty;
 				if(weight >= minWeight)
 				{
+					System.out.println("repeat penalty: " + last.contigName+" "+spa.contigName+" "+penalty);
 					sg.addEdge(last.contigName, spa.contigName, last.readName, last.readEnd, spa.readStart, spa.readLength, lastReversed, !curReversed, weight);
 				}
 			}
