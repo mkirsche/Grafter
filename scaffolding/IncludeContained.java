@@ -21,6 +21,8 @@ public class IncludeContained {
 	
 	static boolean printOrientations = true;
 	
+	static double minWeight = 10;
+	
 	static int minAlignmentLength = 3000;
 @SuppressWarnings("resource")
 public static void main(String[] args) throws IOException
@@ -275,7 +277,6 @@ public static void main(String[] args) throws IOException
 		}
 		out.println(headerLine);
 		
-		System.out.println(s+" "+readMap.containsKey(s)+" "+contigMap.containsKey(s));
 		String seq = merge(scaffoldContigs.get(s), scaffoldEdges.get(s), readMap, contigMap);
 		
 		out.println(seq);
@@ -377,7 +378,7 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
 		}
 		if(verbose)
 		{
-			System.err.println(spa.to+" "+spa.myContigPrefix+" "+spa.theirContigPrefix+" "+spa.myReadEnd+" "+spa.theirReadStart+" "+spa.strand+" "+" "+spa.read);
+			System.err.println(spa.to+" "+spa.myContigPrefix+" "+spa.theirContigPrefix+" "+spa.myReadEnd+" "+spa.theirReadStart+" "+spa.strand+" "+spa.read + " " + spa.weight);
 		}
 		int overlap = 0;
 		if(spa.myReadEnd < spa.theirReadStart)
@@ -465,11 +466,6 @@ static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als, Freq
 			}
 		}
 		
-		if(spa.contigStart > spa.contigEnd)
-		{
-			System.out.println("error: "+spa.contigName+" "+spa.contigLength+" "+spa.contigStart+" "+spa.contigEnd);
-		}
-		
 		if(last != null && !last.contigName.equals(spa.contigName))
 		{
 			int overlap = last.readEnd - spa.readStart;
@@ -481,7 +477,10 @@ static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als, Freq
 				double avgFreq1 = freq.getAverageFrequency(last.contigName, last.contigStart-1, last.contigEnd-1);
 				double avgFreq2 = freq.getAverageFrequency(spa.contigName, spa.contigStart-1, spa.contigEnd-1);
 				weight /= CorrectMisassemblies.harmonicMean(avgFreq1, avgFreq2);
-				System.out.println(avgFreq1+" "+avgFreq2);
+				if(weight < minWeight)
+				{
+					continue;
+				}
 				sg.addEdge(last.contigName, spa.contigName, last.readName, last.readEnd, spa.readStart, spa.readLength, lastReversed, !curReversed, weight);
 			}
 		}
