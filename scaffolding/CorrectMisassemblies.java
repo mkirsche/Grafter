@@ -32,8 +32,8 @@ public class CorrectMisassemblies {
 	
 	// The number of reads which must support a misassembly
 	static int minInversionSupport = 1;
-	static int minChimeraSupport = 3;
-	static int minSplitSupport = 5; // Higher because only requires one endpoint
+	static int minChimeraSupport = 2;
+	static int minSplitSupport = 4; // Higher because only requires one endpoint
 	
 /*
  * Finds inversions based on alignments of contigs to ultralong reads

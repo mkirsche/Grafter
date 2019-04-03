@@ -470,7 +470,7 @@ static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als, Freq
 		{
 			int overlap = last.readEnd - spa.readStart;
 			if(overlap <= spa.contigLength && overlap <= last.contigLength 
-					&& overlap < .7 * Math.min(last.readEnd-last.readStart, spa.readEnd - spa.readStart))
+					&& overlap < .9 * Math.min(last.readEnd-last.readStart, spa.readEnd - spa.readStart))
 			{
 				double lastLength = last.contigEnd - last.contigStart;
 				double curLength = spa.contigEnd - spa.contigStart;
