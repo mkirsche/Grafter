@@ -114,7 +114,7 @@ public static void main(String[] args) throws IOException
 	
 	int chimeras = 0;
 	
-	HashSet<Misjoin> misjoins = new HashSet<>();
+	TreeSet<Misjoin> misjoins = new TreeSet<>();
 	
 	while(input.hasNext())
 	{
@@ -140,10 +140,41 @@ public static void main(String[] args) throws IOException
 			
 			if(!chrA.equals(chrB))
 			{
-				misjoins.add(new Misjoin(line[i], line[i+1]));
+				misjoins.add(new Misjoin(line[i], line[i+1], "chimera"));
 				chimeras++;
 				System.out.println("Chimeric join: " + line[i] + " (length " + contigToLength.get(line[i]) + ") on " + chrA
 						+" to "+line[i+1]+ " (length " + contigToLength.get(line[i+1]) + ") on "+chrB);
+			}
+		}
+	}
+	
+	String orientationsFn = "orientations.txt";
+	input = new Scanner(new FileInputStream(new File(orientationsFn)));
+	
+	int inversions = 0;
+	while(input.hasNext())
+	{
+		String[] line = input.nextLine().split(" ");
+		int n = line.length/2;
+		for(int i = 0; i<n-1; i++)
+		{
+			if(!contigNameToMapping.containsKey(line[2*i]))
+			{
+				continue;
+			}
+			if(!contigNameToMapping.containsKey(line[2*i+2]))
+			{
+				continue;
+			}
+			boolean rev1 = contigNameToMapping.get(line[2*i+0]).reversed;
+			boolean rev2 = contigNameToMapping.get(line[2*i+2]).reversed;
+			if((rev1 == rev2) != (line[2*i+1].equals(line[2*i+3])))
+			{
+				inversions++;
+				misjoins.add(new Misjoin(line[2*i], line[2*i+2], "inversion"));
+				System.out.println("Inversion: " + line[i] + " (length " + contigToLength.get(line[i]) + ") on " 
+						+ contigToChr.get(line[2*i]) +" to "+line[2*i+2]+ " (length " 
+						+ contigToLength.get(line[2*i+2]) + ") on "+contigToChr.get(line[2*i+2]));
 			}
 		}
 	}
@@ -156,6 +187,7 @@ public static void main(String[] args) throws IOException
 	
 	for(Misjoin mj : misjoins)
 	{
+		out.println("MISJOIN: " + mj.type + "  between " + mj.c1 + " and " + mj.c2);
 		out.println(AlignmentIndex.intersect(contigToScaffold.get(mj.c1), contigToScaffold.get(mj.c2)));
 		out.println(contigToChr.get(mj.c1)+" "+contigToChr.get(mj.c2));
 		out.println(contigToLength.get(mj.c1)+" "+contigToLength.get(mj.c2));
@@ -163,6 +195,7 @@ public static void main(String[] args) throws IOException
 	}
 	
 	System.out.println("Chimera joins: " + chimeras);
+	System.out.println("Inversions: " + inversions);
 	
 	out.close();
 }
@@ -181,8 +214,9 @@ static class Chromosome
  */
 static class Misjoin implements Comparable<Misjoin>
 {
+	String type;
 	String c1, c2;
-	Misjoin(String cc1, String cc2)
+	Misjoin(String cc1, String cc2, String tt)
 	{
 		c1 = cc1;
 		c2 = cc2;
@@ -192,11 +226,13 @@ static class Misjoin implements Comparable<Misjoin>
 			c1 = c2;
 			c2 = tmp;
 		}
+		type = tt;
 	}
 	@Override
 	public int compareTo(Misjoin o) {
 		if(!c1.equals(o.c1)) return c1.compareTo(o.c1);
-		return c2.compareTo(o.c2);
+		if(!c2.equals(o.c2)) c2.compareTo(o.c2);
+		return type.compareTo(o.type);
 	}
 }
 /*

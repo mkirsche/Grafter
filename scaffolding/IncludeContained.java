@@ -19,6 +19,8 @@ public class IncludeContained {
 	static boolean outputBroken = false;
 	static boolean allowBreaks = true;
 	
+	static boolean printOrientations = true;
+	
 	static int minAlignmentLength = 3000;
 @SuppressWarnings("resource")
 public static void main(String[] args) throws IOException
@@ -280,6 +282,31 @@ public static void main(String[] args) throws IOException
 	}
 	System.err.println("Number of joins: " + numMerged);
 	
+	if(printOrientations)
+	{
+		printOrientations(scaffoldEdges, splitter);
+	}
+	
+}
+
+static void printOrientations(HashMap<String, ArrayDeque<ScaffoldGraph.Alignment>> als, ContigBreaker splitter) throws IOException
+{
+	PrintWriter out = new PrintWriter(new File("orientations.txt"));
+	for(String s : als.keySet())
+	{
+		ArrayDeque<ScaffoldGraph.Alignment> cur = als.get(s);
+		String contigName = cur.peekFirst().from;
+		String oldName = splitter.sourceMap.containsKey(contigName) ? splitter.sourceMap.get(contigName) : contigName;
+		out.print(oldName + " " + (cur.peekFirst().myContigPrefix ? '-' : '+'));
+		for(ScaffoldGraph.Alignment spa : cur)
+		{
+			contigName = spa.to;
+			oldName = splitter.sourceMap.containsKey(contigName) ? splitter.sourceMap.get(contigName) : contigName;
+			out.print(" " + oldName + " " + (cur.peekFirst().theirContigPrefix ? '+' : '-'));
+		}
+		out.println();
+	}
+	out.close();
 }
 
 /*
