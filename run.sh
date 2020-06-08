@@ -2,7 +2,7 @@ contigsfn=$1
 readsfn=$2
 paffn=$3
 outfile=$4
-
+minq=$5
 minimappath=/scratch/groups/mschatz1/mkirsche/github/minimap2/minimap2
 
 if [ ! -f $paffn ]; then
@@ -17,14 +17,14 @@ javac $BINDIR/scaffolding/*.java
 
 usefulpaf=$paffn'_useful.paf'
 echo 'Finding useful alignments'
-java -cp $BINDIR scaffolding.FindUsefulScaffoldingAlignments $paffn $usefulpaf
+java -cp $BINDIR scaffolding.FindUsefulScaffoldingAlignments aln_fn=$paffn out_file=$usefulpaf minq=$minq
 echo 'Useful alignments output to '$usefulpaf
 
 readmap=$readsfn'_usefulmap.paf'
 contigmap=$contigsfn'_usefulmap.paf'
 newcontigs=$contigsfn'_newcontigs.paf'
 echo 'Scaffolding'
-java -cp $BINDIR scaffolding.Scaffold $usefulpaf $contigsfn $readsfn $readmap $contigmap $newcontigs
+java -cp $BINDIR scaffolding.Scaffold aln_fn=$usefulpaf fasta_fn=$contigsfn read_fn=$readsfn read_map_file=$readmap contig_map_file=$contigmap out_file=$newcontigs
 echo 'Scaffolds output to '$newcontigs
 
 echo 'Integrating scaffolds into assembly'

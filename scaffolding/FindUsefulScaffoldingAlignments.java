@@ -7,6 +7,7 @@ import java.util.*;
 import java.io.*;
 public class FindUsefulScaffoldingAlignments {
 static String pafFn = "", outFn = "";
+static int minQual = 0;
 static void parseArgs(String[] args)
 {
 	for(String arg : args)
@@ -27,6 +28,10 @@ static void parseArgs(String[] args)
 			if(field.equalsIgnoreCase("out_file"))
 			{
 				outFn = val;
+			}
+			if(field.equalsIgnoreCase("minq"))
+			{
+				minQual = Integer.parseInt(val);
 			}
 		}
 	}
@@ -53,6 +58,9 @@ static void usage()
 	System.out.println("  aln_fn   (String) - a file containing the alignments of ultralong reads to contigs");
 	System.out.println("  out_file (String) - the name of the file to output the useful alignments to");
 	System.out.println();
+	System.out.println("Optional args:");
+	System.out.println("  minq     (int)    - the minimum quality of alignments needed to be kept");
+	System.out.println();
 }
 public static void  main(String[] args) throws IOException
 {
@@ -65,6 +73,10 @@ public static void  main(String[] args) throws IOException
 	{
 		String line = input.nextLine();
 		PafAlignment cur = new PafAlignment(line);
+		if(cur.mapq < minQual)
+		{
+			continue;
+		}
 		String readName = cur.readName;
 		if(!alignmentsPerRead.containsKey(readName)) alignmentsPerRead.put(readName, new ArrayList<PafAlignment>());
 		alignmentsPerRead.get(readName).add(cur);
@@ -124,6 +136,7 @@ static class PafAlignment
 	int contigLength, contigStart, contigEnd;
 	char strand;
 	String line;
+	int mapq;
 	// Call with a second parameter to denote that read and contig were flipped when calling minimap2
 	PafAlignment(String line, int backwards)
 	{
@@ -138,6 +151,7 @@ static class PafAlignment
 		readLength = Integer.parseInt(ss[6]);
 		readStart = Integer.parseInt(ss[7]);
 		readEnd = Integer.parseInt(ss[8]);
+		mapq = Integer.parseInt(ss[11]);
 	}
 	PafAlignment(String line)
 	{
@@ -152,6 +166,7 @@ static class PafAlignment
 		contigLength = Integer.parseInt(ss[6]);
 		contigStart = Integer.parseInt(ss[7]);
 		contigEnd = Integer.parseInt(ss[8]);
+		mapq = Integer.parseInt(ss[11]);
 	}
 }
 }
