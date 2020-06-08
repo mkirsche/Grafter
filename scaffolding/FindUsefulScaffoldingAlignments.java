@@ -6,23 +6,57 @@ Scaffolding assemblies with long-read alignments
 import java.util.*;
 import java.io.*;
 public class FindUsefulScaffoldingAlignments {
-@SuppressWarnings("resource")
+static String pafFn = "", outFn = "";
+static void parseArgs(String[] args)
+{
+	for(String arg : args)
+	{
+		int equalsIdx = arg.indexOf("=");
+		if(equalsIdx == -1)
+		{
+			
+		}
+		else
+		{
+			String field = arg.substring(0, equalsIdx);
+			String val = arg.substring(1 + equalsIdx);
+			if(field.equalsIgnoreCase("aln_fn"))
+			{
+				pafFn = val;
+			}
+			if(field.equalsIgnoreCase("out_file"))
+			{
+				outFn = val;
+			}
+		}
+	}
+	if(pafFn.length() == 0)
+	{
+		usage();
+		System.exit(1);
+	}
+	if(outFn.length() == 0)
+	{
+		usage();
+		System.exit(1);
+	}
+}
+
+static void usage()
+{
+	System.out.println();
+	System.out.println("Ultralong Scaffolding - module for finding useful alignments");
+	System.out.println("Usage: java -cp . scaffolding.FindUsefulScaffoldingArguments [args]");
+	System.out.println("  Example: java -cp . scaffolding.FindUsefulScaffoldingArguments aln_fn=aln.paf out_file=out.paf");
+	System.out.println();
+	System.out.println("Required args:");
+	System.out.println("  aln_fn   (String) - a file containing the alignments of ultralong reads to contigs");
+	System.out.println("  out_file (String) - the name of the file to output the useful alignments to");
+	System.out.println();
+}
 public static void  main(String[] args) throws IOException
 {
-	String pafFn = "rel2_200kplus_ccs.paf";
-	String outFn = "rel2_200kplus_ccs_useful.paf";
-	
-	if(args.length > 0 && args[0].equals("--server"))
-	{
-		pafFn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/rel2_200kplus_ccs.paf";
-		outFn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/rel2_200kplus_ccs_useful.paf";
-	}
-	
-	else if(args.length >= 2)
-	{
-		pafFn = args[0];
-		outFn = args[1];
-	}
+	parseArgs(args);
 	
 	Scanner input = new Scanner(new FileInputStream(new File(pafFn)));
 	PrintWriter out = new PrintWriter(new File(outFn));
@@ -35,8 +69,10 @@ public static void  main(String[] args) throws IOException
 		if(!alignmentsPerRead.containsKey(readName)) alignmentsPerRead.put(readName, new ArrayList<PafAlignment>());
 		alignmentsPerRead.get(readName).add(cur);
 	}
+	
 	int tot = 0;
 	for(String s : alignmentsPerRead.keySet()) 
+	{
 		if(alignmentsPerRead.get(s).size() == 2)
 		{
 			PafAlignment first = alignmentsPerRead.get(s).get(0);
@@ -73,6 +109,7 @@ public static void  main(String[] args) throws IOException
 			out.println(first.line + "\n" + second.line);
 			tot++;
 		}
+	}
 	out.close();
 	System.err.println("Number of useful alignments: " + tot);
 }

@@ -8,42 +8,94 @@ import java.io.*;
 public class Scaffold {
 	static int maxHanging = 100;
 	
+	static void parseArgs(String[] args)
+	{
+		for(String arg : args)
+		{
+			int equalsIdx = arg.indexOf("=");
+			if(equalsIdx == -1)
+			{
+				
+			}
+			else
+			{
+				String field = arg.substring(0, equalsIdx);
+				String val = arg.substring(1 + equalsIdx);
+				if(field.equalsIgnoreCase("aln_fn"))
+				{
+					alnFn = val;
+				}
+				if(field.equalsIgnoreCase("fasta_fn"))
+				{
+					fastaFn = val;
+				}
+				if(field.equalsIgnoreCase("read_fn"))
+				{
+					readFn = val;
+				}
+				if(field.equalsIgnoreCase("read_map_file"))
+				{
+					readMapFile = val;
+				}
+				if(field.equalsIgnoreCase("contig_map_file"))
+				{
+					contigMapFile = val;
+				}
+				if(field.equalsIgnoreCase("out_file"))
+				{
+					outFile = val;
+				}
+				if(field.equalsIgnoreCase("max_hanging"))
+				{
+					maxHanging = Integer.parseInt(val);
+				}
+			}
+		}
+		if(alnFn.length() == 0 || fastaFn.length() == 0 || readFn.length() == 0)
+		{
+			usage();
+			System.exit(1);
+		}
+		if(readMapFile.length() == 0 || contigMapFile.length() == 0 || outFile.length() == 0)
+		{
+			usage();
+			System.exit(1);
+		}
+	}
+	
+	static void usage()
+	{
+		System.out.println();
+		System.out.println("Ultralong Scaffolding");
+		System.out.println("Usage: java -cp . scaffolding.Scaffold [args]");
+		System.out.println("  Example: java -cp . scaffolding.Scaffold aln_fn=aln.paf fasta_fn=contigs.fasta read_fn=reads.fastq");
+		System.out.println("    read_map_file=useful_reads.paf contig_map_file=useful_contigs.paf out_file=out.fasta");
+		System.out.println();
+		System.out.println("Required args:");
+		System.out.println("  aln_fn          (String) - a file containing the alignments of ultralong reads to contigs");
+		System.out.println("  fasta_fn        (String) - the contigs in FASTA format");
+		System.out.println("  read_fn         (String) - the ultralong reads in FASTQ format");
+		System.out.println("  read_map_file   (String) - TODO");
+		System.out.println("  contig_map_file (String) - TODO");
+		System.out.println("  out_file        (String) - the name of the file to output the scaffolded contigs to");
+		System.out.println();
+		System.out.println("Optional args");
+		System.out.println("  max_hanging     (int)    - the maximum amount by which the end of a contig can exceed the alignment and still be joined");
+		System.out.println();
+	}
+	
 @SuppressWarnings("resource")
+static String alnFn = "", fastaFn = "", readFn = "", readMapFile = "", contigMapFile = "", outFile = "";
 public static void main(String[] args) throws IOException
 {
-	String fn = "rel2_200kplus_ccs_useful.paf";
-	String fastaFn = "";
-	String readFn = "";
-	String readMapFile = "readmap_paternal.txt";
-	String contigMapFile = "contigmap_paternal.txt";
-	String outFile = "paternal_newcontigs.fa";
-	
-	if(args.length > 0 && args[0].equals("--server"))
-	{
-		fn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/rel2_200kplus_ccs_useful.paf";
-		fastaFn = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/paternal_and_unknown.contigs.mmpoa.fa";
-		readFn = "/scratch/groups/mschatz1/mkirsche/ultralong/rel2_200kplus.fastq";
-		readMapFile = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/readmap_paternal.txt";
-		contigMapFile = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/contigmap_paternal.txt";
-		outFile = "/scratch/groups/mschatz1/mkirsche/ultralong/ccs/paternal_newcontigs.fa";
-	}
-	
-	else if(args.length >= 6)
-	{
-		fn = args[0];
-		fastaFn = args[1];
-		readFn = args[2];
-		readMapFile = args[3];
-		contigMapFile = args[4];
-		outFile = args[5];
-	}
+	parseArgs(args);
 	
 	ArrayList<PafAlignment> als = new ArrayList<PafAlignment>();
 	HashSet<String> readNames = new HashSet<String>();
 	HashSet<String> contigNames = new HashSet<String>();
 	
 	HashMap<String, String> readMap, contigMap;
-	Scanner input = new Scanner(new FileInputStream(new File(fn)));
+	Scanner input = new Scanner(new FileInputStream(new File(alnFn)));
 	
 	/*
 	 * Read paf alignments and store names of relevant reads/contigs
