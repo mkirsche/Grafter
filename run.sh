@@ -15,14 +15,14 @@ BINDIR=`dirname $(readlink -f "$0")`
 echo 'Compiling'
 javac $BINDIR/scaffolding/*.java
 
-usefulpaf=$paffn'_useful.paf'
+usefulpaf=$paffn'_useful_'$minq'.paf'
 echo 'Finding useful alignments'
 java -cp $BINDIR scaffolding.FindUsefulScaffoldingAlignments aln_fn=$paffn out_file=$usefulpaf minq=$minq
 echo 'Useful alignments output to '$usefulpaf
 
-readmap=$readsfn'_usefulmap.paf'
-contigmap=$contigsfn'_usefulmap.paf'
-newcontigs=$contigsfn'_newcontigs.paf'
+readmap=$readsfn'_usefulmap_'$minq'.paf'
+contigmap=$contigsfn'_usefulmap_'$minq'.paf'
+newcontigs=$contigsfn'_newcontigs_'$minq'.paf'
 echo 'Scaffolding'
 java -cp $BINDIR scaffolding.Scaffold aln_fn=$usefulpaf fasta_fn=$contigsfn read_fn=$readsfn read_map_file=$readmap contig_map_file=$contigmap out_file=$newcontigs
 echo 'Scaffolds output to '$newcontigs
