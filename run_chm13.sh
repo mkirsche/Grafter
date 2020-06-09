@@ -1,0 +1,1 @@
+./run.sh /work-zfs/mschatz1/CHM13/drafts/20200602/simplified.nodes.fasta /work-zfs/mschatz1/CHM13/raw/UL_ONT/rel5_400k.fastq /work-zfs/mschatz1/CHM13/minimap_ul_0602_400k.paf /work-zfs/mschatz1/CHM13/scaffolded_400k_60.fasta 60
