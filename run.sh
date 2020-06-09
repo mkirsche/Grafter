@@ -3,7 +3,7 @@ readsfn=$2
 paffn=$3
 outfile=$4
 minq=$5
-minimappath=/scratch/groups/mschatz1/mkirsche/github/minimap2/minimap2
+minimappath=/work-zfs/mschatz1/pipelines/soft/minimap2
 
 if [ ! -f $paffn ]; then
     echo "PAF file not found - generating it"
