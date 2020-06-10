@@ -4,29 +4,9 @@ import java.io.*;
 
 public class IncludeContained {
 	
-	// The number of reads required to support the joining of two contigs
-	static int minReadSupport = 1;
-	static double minWeightSupport = 15000;
-	
-	static double maxHangingProportion = 0.02;
-	static int maxHanging = 1000;
-	static boolean fileMap = false;
-	static boolean verbose = true;
-	static boolean outputBroken = false;
-	static boolean allowBreaks = false;
-	
-	static boolean printOrientations = true;
-	
-	static double minWeight = 10;
-	
-	static int minAlignmentLength = 3000;
-	
-	static int minQuality = 40;
-	
-	static String pafFn = "", fastaFn = "", readFn = "";
-	static String readMapFile = "", contigMapFile = "", outFn = "";
-	static String brokenOutputFile = "", graphFn = "";
-	
+	/*
+	 * Parse command line arguments
+	 */
 	static void parseArgs(String[] args)
 	{
 		for(String arg : args)
@@ -36,7 +16,11 @@ public class IncludeContained {
 			{
 				if(arg.toLowerCase().endsWith("break"))
 				{
-					allowBreaks = true;
+					Settings.ALLOW_BREAKS = true;
+				}
+				if(arg.toLowerCase().endsWith("reuse_relevant_seqs"))
+				{
+					Settings.reuseRelevantSeqs = true;
 				}
 			}
 			else
@@ -45,59 +29,67 @@ public class IncludeContained {
 				String val = arg.substring(1 + equalsIdx);
 				if(field.equalsIgnoreCase("aln_fn"))
 				{
-					pafFn = val;
+					Settings.pafFn = val;
 				}
 				if(field.equalsIgnoreCase("fasta_fn"))
 				{
-					fastaFn = val;
+					Settings.fastaFn = val;
 				}
 				if(field.equalsIgnoreCase("read_fn"))
 				{
-					readFn = val;
+					Settings.readFn = val;
 				}
 				if(field.equalsIgnoreCase("graph_fn"))
 				{
-					graphFn = val;
+					Settings.graphFn = val;
 				}
 				if(field.equalsIgnoreCase("read_map_file"))
 				{
-					readMapFile = val;
+					Settings.relevantReadSequenceFile = val;
 				}
 				if(field.equalsIgnoreCase("outputbroken"))
 				{
-					outputBroken = true;
-					brokenOutputFile = val;
+					Settings.OUTPUT_BROKEN = true;
+					Settings.brokenOutputFile = val;
 				}
 				if(field.equalsIgnoreCase("contig_map_file"))
 				{
-					contigMapFile = val;
+					Settings.relevantContigSequenceFile = val;
 				}
 				if(field.equalsIgnoreCase("out_file"))
 				{
-					outFn = val;
+					Settings.outFn = val;
 				}
 				if(field.equalsIgnoreCase("max_hanging"))
 				{
-					maxHanging = Integer.parseInt(val);
+					Settings.MAX_HANGING = Integer.parseInt(val);
 				}
 				if(field.equalsIgnoreCase("minq"))
 				{
-					minQuality = Integer.parseInt(val);
+					Settings.MIN_QUALITY = Integer.parseInt(val);
 				}
 			}
 		}
-		if(pafFn.length() == 0 || fastaFn.length() == 0 || readFn.length() == 0)
+		if(Settings.pafFn.length() == 0 || Settings.fastaFn.length() == 0)
 		{
 			usage();
 			System.exit(1);
 		}
-		if(readMapFile.length() == 0 || contigMapFile.length() == 0 || outFn.length() == 0)
+		if(Settings.relevantReadSequenceFile.length() == 0 || Settings.relevantContigSequenceFile.length() == 0)
+		{
+			usage();
+			System.exit(1);
+		}
+		if(Settings.readFn.length() == 0 || Settings.outFn.length() == 0)
 		{
 			usage();
 			System.exit(1);
 		}
 	}
 	
+	/*
+	 * Print a usage menu
+	 */
 	static void usage()
 	{
 		System.out.println();
@@ -111,35 +103,35 @@ public class IncludeContained {
 		System.out.println("  fasta_fn        (String) - the contigs in FASTA format");
 		System.out.println("  read_fn         (String) - the ultralong reads in FASTQ format");
 		System.out.println("  outputbroken    (String) - where to output broken contigs");
-		System.out.println("  read_map_file   (String) - TODO");
-		System.out.println("  contig_map_file (String) - TODO");
+		System.out.println("  read_map_file   (String) - where to output sequences of relevant reads");
+		System.out.println("  contig_map_file (String) - Where to output sequences of relevant contigs");
 		System.out.println("  out_file        (String) - the name of the file to output the scaffolded contigs to");
 		System.out.println();
 		System.out.println("Optional args");
-		System.out.println("  max_hanging (int) [1000]    - the maximum amount by which the end of a contig can exceed the alignment and still be joined");
-		System.out.println("  minq        (int) [40]      - the minimum quality of alignments needed to be kept");
+		System.out.println("  max_hanging (int)    [1000] - the maximum amount by which the end of a contig can exceed the alignment and still be joined");
+		System.out.println("  minq        (int)    [40]   - the minimum quality of alignments needed to be kept");
 		System.out.println("  graph_fn    (String) [none] - a GFA file containing an assembly graph, causing only alignments which are validated by the graph to be kept");
 		System.out.println("  --break                     - allows original contigs to be broken");
+		System.out.println("  --reuse_relevant_seqs       - reuse files with sequences of relevant reads and contigs");
 		System.out.println();
 	}
 	
-public static void main(String[] args) throws IOException
+public static void main(String[] args) throws Exception
 {
+	// Read in command line parameters
 	parseArgs(args);
 	
-	Scanner input = new Scanner(new FileInputStream(new File(pafFn)));
-	PrintWriter out = new PrintWriter(new File(outFn));
+	Scanner input = new Scanner(new FileInputStream(new File(Settings.pafFn)));
+	PrintWriter out = new PrintWriter(new File(Settings.outFn));
 	
-	/*
-	 * Read in alignments and bucket by which read was aligned
-	 */
+	// Read in alignments and bucket by which read was aligned
 	HashMap<String, ArrayList<SortablePafAlignment>> alignmentsPerRead = new HashMap<>();
 	while(input.hasNext())
 	{
 		String line = input.nextLine();
 		SortablePafAlignment cur = new SortablePafAlignment(line);
 		
-		double curThreshold = Math.min(.2 * cur.readLength, minAlignmentLength);
+		double curThreshold = Math.min(.2 * cur.readLength, Settings.MIN_ALIGNMENT_LENGTH);
 		
 		// Filter out short alignments
 		if(cur.readEnd - cur.readStart < curThreshold)
@@ -148,21 +140,22 @@ public static void main(String[] args) throws IOException
 		}
 		
 		// Filter out low-quality alignments
-		if(cur.mapq < minQuality)
+		if(cur.mapq < Settings.MIN_QUALITY)
 		{
 			continue;
 		}
 		
 		String readName = cur.readName;
 		
-		ReadUtils.addInit(alignmentsPerRead, readName, cur);
+		ReadUtils.addToMap(alignmentsPerRead, readName, cur);
 	}
 	
+	// If performing misassembly correction, find a list of breakpoints based on novel adjacencies
 	ArrayList<CorrectMisassemblies.NovelAdjacency> corrections = new ArrayList<CorrectMisassemblies.NovelAdjacency>();
-	if(allowBreaks)
+	if(Settings.ALLOW_BREAKS)
 	{
 		corrections = CorrectMisassemblies.findMisassemblies(alignmentsPerRead);
-		if(verbose)
+		if(Settings.VERBOSE)
 		{
 			for(CorrectMisassemblies.NovelAdjacency na : corrections)
 			{
@@ -172,7 +165,8 @@ public static void main(String[] args) throws IOException
 		}
 	}
 	
-	HashSet<String> contigNames = new HashSet<>();
+	// Perform splitting as needed and remap reads to broken contigs
+	HashSet<String> contigNames = new HashSet<String>();
 	
 	CorrectMisassemblies.ContigBreaker splitter = new CorrectMisassemblies.ContigBreaker(corrections, contigNames);
 	
@@ -181,10 +175,16 @@ public static void main(String[] args) throws IOException
 	alignmentsPerRead = CorrectMisassemblies.remapAll(splitter, alignmentsPerRead);
 	
 	/*
-	 * Get chains of unique mappings and keep track of contigs/reads involved in them
+	 * Get chains of unique mappings to reads and keep track of contigs/reads involved in them
 	 */
+	
+	// Map from read to alignment chains it's involved in
 	HashMap<String, ArrayList<ArrayList<SortablePafAlignment>>> chainsPerRead = new HashMap<>();
+	
+	// Set of read names involved in alignment chains
 	HashSet<String> readNames = new HashSet<String>();
+	
+	// Iterate over reads, find chains of read
 	for(String s : alignmentsPerRead.keySet())
 	{
 		if(alignmentsPerRead.get(s).size() == 1)
@@ -192,7 +192,7 @@ public static void main(String[] args) throws IOException
 			continue;
 		}
 		
-		ArrayList<ArrayList<SortablePafAlignment>> chains = getUniqueMatches(alignmentsPerRead.get(s));
+		ArrayList<ArrayList<SortablePafAlignment>> chains = AlignmentGatherer.getUniqueMatches(alignmentsPerRead.get(s));
 		
 		if(chains.size() > 0)
 		{
@@ -203,10 +203,6 @@ public static void main(String[] args) throws IOException
 					contigNames.add(spa.contigName);
 				}
 			}
-		}
-		
-		if(chains.size() > 0)
-		{
 			chainsPerRead.put(s, chains);
 			readNames.add(s);
 		}
@@ -215,68 +211,79 @@ public static void main(String[] args) throws IOException
 	/*
 	 * Output broken assembly
 	 */
-	if(outputBroken && corrections.size() > 0)
+	if(Settings.OUTPUT_BROKEN && corrections.size() > 0)
 	{
 		System.err.println("Outputting broken assembly");
-		splitter.outputBrokenAssembly(fastaFn, brokenOutputFile);
+		splitter.outputBrokenAssembly(Settings.fastaFn, Settings.brokenOutputFile);
 	}
 	
 	/*
 	 * Get sequences of relevant contigs/reads for merging
 	 */
-	HashMap<String, String> readMap = new HashMap<>(), contigMap = new HashMap<>();
-	if(!fileMap || (readMap = ReadUtils.readMap(readMapFile)).size() == 0)
+	
+	// Relevant reads
+	HashMap<String, String> readSequences = new HashMap<>(), contigSequences = new HashMap<>();
+	if(!Settings.reuseRelevantSeqs || (readSequences = ReadUtils.readMap(Settings.relevantReadSequenceFile)).size() == 0)
 	{
 		System.err.println("Filtering reads");
-		if(readFn.endsWith(".fa") || readFn.endsWith(".fasta"))
+		if(Settings.readFn.endsWith(".fa") || Settings.readFn.endsWith(".fasta"))
 		{
-			readMap = ReadUtils.getFastaMap(readFn, readNames);
+			readSequences = ReadUtils.getFastaMap(Settings.readFn, readNames);
 		}
 		else
 		{
-			readMap = ReadUtils.getFastqMap(readFn, readNames);
+			readSequences = ReadUtils.getFastqMap(Settings.readFn, readNames);
 		}
-		ReadUtils.writeMap(readMapFile, readMap);
-	}
-	if(!fileMap || (contigMap = ReadUtils.readMap(contigMapFile)).size() == 0)
-	{
-		System.err.println("Filtering contigs");
-		contigMap = ReadUtils.getFastaMap(fastaFn, contigNames);
-		ReadUtils.writeMap(contigMapFile, contigMap);
+		ReadUtils.writeMap(Settings.relevantReadSequenceFile, readSequences);
 	}
 	
-	if(verbose)
+	// Relevant contigs
+	if(!Settings.reuseRelevantSeqs || (contigSequences = ReadUtils.readMap(Settings.relevantContigSequenceFile)).size() == 0)
+	{
+		System.err.println("Filtering contigs");
+		contigSequences = ReadUtils.getFastaMap(Settings.fastaFn, contigNames);
+		ReadUtils.writeMap(Settings.relevantContigSequenceFile, contigSequences);
+	}
+	
+	if(Settings.VERBOSE)
 	{
 		System.err.println("Split contigs:\n" +splitter.subcontigMap.keySet());
 	}
+	
+	// Adjust contig sequence map based on any splitting that happened
 	ArrayList<String> keys = new ArrayList<String>();
-	keys.addAll(contigMap.keySet());
+	keys.addAll(contigSequences.keySet());
+	
 	for(String s : keys)
 	{
-		if(splitter.breakSequence(s, contigMap.get(s)))
+		if(splitter.breakSequence(s, contigSequences.get(s)))
 		{
-			contigMap.remove(s);
+			contigSequences.remove(s);
 		}
 	}
-	
 	for(String splitContigName : splitter.sequenceMap.keySet())
 	{
-		contigMap.put(splitContigName, splitter.sequenceMap.get(splitContigName));
+		contigSequences.put(splitContigName, splitter.sequenceMap.get(splitContigName));
 	}
 	
+	/*
+	 * Compute k-mer frequencies across different reads which will be used to get better measures of overlap for graph-building
+	 */
 	System.err.println("Initializing frequency map for contig kmers");
-	FreqqyMap freq = new FreqqyMap();
+	ContigKmerFrequencyMap freq = new ContigKmerFrequencyMap();
 	
+	// Add k-mers to index for overall counts and lengths of sequences
 	System.err.println("Adding contig kmer frequencies");
-	for(String s : contigMap.keySet())
+	for(String s : contigSequences.keySet())
 	{
-		freq.addKmerCount(s, contigMap.get(s));
+		freq.addKmerCount(s, contigSequences.get(s));
 	}
 	
+	// Index the k-mer counts of each sequence with a cumulative sum array for faster queries
 	System.err.println("Indexing contig kmer frequencies");
-	for(String s : contigMap.keySet())
+	for(String s : contigSequences.keySet())
 	{
-		freq.addSumArray(s, contigMap.get(s));
+		freq.addSumArray(s, contigSequences.get(s));
 	}
 	
 	/*
@@ -294,7 +301,10 @@ public static void main(String[] args) throws IOException
 		}
 	}
 	
-	contigMap.put("undosplit", "A");
+	/*
+	 * Add a dummy edge between split contigs to give them the opportunity to be rejoined if they don't get joined with other things
+	 */
+	readSequences.put("undosplit", "A");
 	for(String s : splitter.subcontigMap.keySet())
 	{
 		ArrayList<CorrectMisassemblies.ContigBreaker.Subcontig> subs = splitter.subcontigMap.get(s);
@@ -305,6 +315,12 @@ public static void main(String[] args) throws IOException
 		}
 	}
 	
+	// Output the contig overlap graph
+	OutputScaffolds.outputGfa("gfaFn", sg, contigSequences);
+	
+	/*
+	 * Run scaffolding on the graph
+	 */
 	ScaffoldGraph.Scaffolding results = sg.globalScaffolding();
 	HashMap<String, ArrayDeque<String>> scaffoldContigs = results.scaffoldContigs;
 	HashMap<String, ArrayDeque<ScaffoldGraph.Alignment>> scaffoldEdges = results.scaffoldEdges;
@@ -317,14 +333,14 @@ public static void main(String[] args) throws IOException
 	 */
 	for(String s : scaffoldContigs.keySet())
 	{
-		String headerLine = createHeaderLine(scaffoldContigs.get(s), splitter);
-		if(verbose)
+		String headerLine = OutputScaffolds.createHeaderLine(scaffoldContigs.get(s), splitter);
+		if(Settings.VERBOSE)
 		{
 			System.err.println(headerLine);
 		}
 		out.println(headerLine);
 		
-		String seq = merge(scaffoldContigs.get(s), scaffoldEdges.get(s), readMap, contigMap);
+		String seq = merge(scaffoldContigs.get(s), scaffoldEdges.get(s), readSequences, contigSequences);
 		
 		out.println(seq);
 	}
@@ -346,61 +362,11 @@ public static void main(String[] args) throws IOException
 	}
 	System.err.println("Number of joins: " + numMerged);
 	
-	if(printOrientations)
+	if(Settings.PRINT_ORIENT)
 	{
-		printOrientations(scaffoldEdges, splitter);
+		OutputScaffolds.printOrientations(scaffoldEdges, splitter);
 	}
 	
-}
-
-static void printOrientations(HashMap<String, ArrayDeque<ScaffoldGraph.Alignment>> als, CorrectMisassemblies.ContigBreaker splitter) throws IOException
-{
-	PrintWriter out = new PrintWriter(new File("orientations.txt"));
-	for(String s : als.keySet())
-	{
-		ArrayDeque<ScaffoldGraph.Alignment> cur = als.get(s);
-		String contigName = cur.peekFirst().from;
-		String oldName = splitter.sourceMap.containsKey(contigName) ? splitter.sourceMap.get(contigName) : contigName;
-		out.print(oldName + " " + (cur.peekFirst().myContigPrefix ? '-' : '+'));
-		for(ScaffoldGraph.Alignment spa : cur)
-		{
-			contigName = spa.to;
-			oldName = splitter.sourceMap.containsKey(contigName) ? splitter.sourceMap.get(contigName) : contigName;
-			out.print(" " + oldName + " " + (cur.peekFirst().theirContigPrefix ? '+' : '-'));
-		}
-		out.println();
-	}
-	out.close();
-}
-
-/*
- * Create a Fasta header line for a scaffold based on the names of contigs which make it up
- * format is >contigs1&contig2&... contig1 contig2 contig3 ...
- */
-static String createHeaderLine(ArrayDeque<String> contigs, CorrectMisassemblies.ContigBreaker splitter)
-{
-	StringBuilder res = new StringBuilder("");
-	HashSet<String> contigSet = new HashSet<String>();
-	for(String s : contigs)
-	{
-		if(res.length() > 0) res.append("&");
-		else res.append(">");
-		res.append(s);
-		contigSet.add(s);
-	}
-	
-	for(String s : contigs)
-	{
-		if(splitter.sourceMap.containsKey(s))
-		{
-			res.append(" " + splitter.sourceMap.get(s));
-		}
-		else
-		{
-			res.append(" " + s);
-		}
-	}
-	return res.toString();
 }
 
 /*
@@ -416,14 +382,14 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
 		{
 			first = false;
 			String curSeq = relevantContigs.get(contigs.peekFirst());
-			if(verbose)
+			if(Settings.VERBOSE)
 			{
 				System.err.println(contigs.peekFirst()+" "+curSeq.length());
 			}
 			if(spa.myContigPrefix) curSeq = ReadUtils.reverseComplement(curSeq);
 			res.append(curSeq);
 		}
-		if(verbose)
+		if(Settings.VERBOSE)
 		{
 			System.err.println(spa.to+" "+spa.myContigPrefix+" "+spa.theirContigPrefix+" "+spa.myReadEnd+" "+spa.theirReadStart+" "+spa.strand+" "+spa.read + " " + spa.weight);
 		}
@@ -444,7 +410,7 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
 		
 		String curSeq = relevantContigs.get(spa.to);
 				
-		if(verbose)
+		if(Settings.VERBOSE)
 		{
 			System.err.println(spa.to + " " + curSeq.length() + " " +overlap);
 		}
@@ -461,7 +427,7 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
 /*
  * Add edges to a scaffold graph based on a chain of alignments to the same read
  */
-static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als, FreqqyMap freq)
+static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als, ContigKmerFrequencyMap freq)
 {
 	SortablePafAlignment last = null;
 	boolean lastReversed = false;
@@ -471,8 +437,8 @@ static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als, Freq
 		
 		boolean curReversed = false;
 		
-		boolean[] cse = contigStartEnd(spa);
-		boolean[] rse = readStartEnd(spa);
+		boolean[] cse = AlignmentGatherer.contigStartEnd(spa);
+		boolean[] rse = AlignmentGatherer.readStartEnd(spa);
 		
 		if(cse[0] && cse[1])
 		{
@@ -527,7 +493,7 @@ static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als, Freq
 				double penalty = CorrectMisassemblies.harmonicMean(avgFreq1, avgFreq2);
 				System.out.println("repeat penalty: " + last.contigName+" "+spa.contigName+" "+penalty);
 				weight /= penalty;
-				if(weight >= minWeight)
+				if(weight >= Settings.MIN_WEIGHT)
 				{
 					System.out.println("repeat penalty: " + last.contigName+" "+spa.contigName+" "+penalty);
 					sg.addEdge(last.contigName, spa.contigName, last.readName, last.readEnd, spa.readStart, spa.readLength, lastReversed, !curReversed, weight);
@@ -540,294 +506,5 @@ static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als, Freq
 	}
 }
 
-/*
- * General end checking for alignments
- */
-static boolean[] startEnd(int startPos, int endPos, int length)
-{
-	double curMaxHanging = Math.min(maxHangingProportion*length, maxHanging);
-	return new boolean[] {startPos < curMaxHanging, endPos + curMaxHanging >= length};
-}
 
-/*
- * Whether or not an alignment contains the start/end of the contig involved
- */
-static boolean[] contigStartEnd(SortablePafAlignment pa)
-{
-	return startEnd(pa.contigStart, pa.contigEnd, pa.contigLength);
-}
-
-/*
- * Whether or not an alignment contains the start/end of the read involved
- */
-static boolean[] readStartEnd(SortablePafAlignment pa)
-{
-	return startEnd(pa.readStart, pa.readEnd, pa.readLength);
-}
-
-/*
- * Compresses the alignments to a given read by combining alignments of the same contig into one
- * Also, filters out invalid alignments
- */
-static int MAX_GAP = 10000;
-static ArrayList<SortablePafAlignment> compress(ArrayList<SortablePafAlignment> alignments, boolean filterInvalid)
-{
-	int n = alignments.size();
-
-	Comparator<SortablePafAlignment> byContigName = new Comparator<SortablePafAlignment>() {
-
-		@Override
-		public int compare(SortablePafAlignment a, SortablePafAlignment b) {
-			if(a.contigName.equals(b.contigName))
-			{
-				return a.compareTo(b);
-			}
-			return a.contigName.compareTo(b.contigName);
-		}
-	};
-	
-	// Sort by contig name and break ties by read start position
-	Collections.sort(alignments, byContigName);
-	ArrayList<SortablePafAlignment> filtered = new ArrayList<>();
-	for(int i = 0; i<n; i++)
-	{
-		// Find the end of the run of alignments of the current contig
-		int j = i+1;
-		while(j< n && alignments.get(i).contigName.equals(alignments.get(j).contigName))
-		{
-			j++;
-		}
-		
-		// Now alignments[i:j) has all the alignments of this contig - combine or remove them
-		boolean[] rse = new boolean[2], cse = new boolean[2];
-		boolean gapFree = true;
-		int lastReadEndPosition = alignments.get(i).readEnd;
-		int lastContigEndPosition = alignments.get(i).contigEnd;
-		for(int k = i; k<j; k++)
-		{
-			SortablePafAlignment cur = alignments.get(k);
-			
-			if(k > i && alignments.get(k-1).strand != alignments.get(k).strand)
-			{
-				j = k;
-				break;
-			}
-			
-			// Check for a gap between this alignment and the last one in either the read or contig
-			if(cur.contigStart - lastContigEndPosition > MAX_GAP)
-			{
-				gapFree = false;
-				break;
-			}
-			if(cur.readStart - lastReadEndPosition > MAX_GAP)
-			{
-				gapFree = false;
-				break;
-			}
-			
-			lastContigEndPosition = cur.contigEnd;
-			lastReadEndPosition = cur.readEnd;
-			boolean[] crse = readStartEnd(cur);
-			boolean[] ccse = contigStartEnd(cur);
-			for(int q = 0; q<2; q++)
-			{
-				rse[q] |= crse[q];
-				cse[q] |= ccse[q];
-			}
-		}
-		
-		/*
-		 * If the set of alignments had a large gap, ignore it 
-		 */
-		if(!gapFree)
-		{
-			i = j - 1;
-			continue;
-		}
-		
-		/*
-		 * We have whether the alignment set covers the start/end of contig/read, so check that it's valid
-		 */
-		if(filterInvalid && !cse[0] && !cse[1])
-		{
-			/*
-			 * Middle portion of contig aligns somewhere on read but neither end of it
-			 * Only possible case is read contained in contig, making alignment useless
-			 * Throw out the alignment and update i
-			 */
-			i = j - 1;
-			continue;
-		}
-		else if(filterInvalid && !rse[0] && !rse[1])
-		{
-			/*
-			 * Neither end of the read is involved, so contig must be contained in the read
-			 * Filter out cases which don't reflect this
-			 */
-			if(!cse[0] || !cse[1])
-			{
-				i = j - 1;
-				continue;
-			}
-		}
-		else
-		{
-			/*
-			 * Create consensus of all of the alignments by taking earliest start and latest end
-			 */
-			SortablePafAlignment total = alignments.get(i).copy();
-			for(int k = i+1; k<j; k++)
-			{
-				SortablePafAlignment cur = alignments.get(k);
-				total.contigStart = Math.min(total.contigStart, cur.contigStart);
-				total.contigEnd = Math.max(total.contigEnd, cur.contigEnd);
-				total.readStart = Math.min(total.readStart, cur.readStart);
-				total.readEnd = Math.max(total.readEnd, cur.readEnd);
-			}
-			i = j - 1;
-			filtered.add(total);
-		}
-	}
-	
-	Collections.sort(filtered);
-	return filtered;
-}
-
-/*
- * Gets chains of unique matches to a read given the list of all of the alignments to it
- */
-@SuppressWarnings("unchecked")
-static ArrayList<ArrayList<SortablePafAlignment>> getUniqueMatches(ArrayList<SortablePafAlignment> alignments)
-{
-	/*
-	 * Sort by start point
-	 */
-	Collections.sort(alignments);
-	
-	/*
-	 * Compress all alignments of the same contig and remove invalid alignments
-	 */
-	alignments = compress(alignments, true);
-	
-	/*
-	 * List of chains of alignments
-	 */
-	ArrayList<ArrayList<SortablePafAlignment>> res = new ArrayList<>();
-	
-	/*
-	 * The list of alignments in the current chain
-	 */
-	ArrayList<SortablePafAlignment> cur = new ArrayList<>();
-	for(int i = 0 ; i<alignments.size(); i++)
-	{
-		
-		SortablePafAlignment a = alignments.get(i);
-		
-		/*
-		 * Cases: 
-		 *   1.) Contained in a previous alignment -> Ignore this alignment
-		 *   2.) Overlaps last two alignments -> End chain here
-		 *   3.) Valid continuation of chain
-		 */
-		if(cur.size() >= 1 && cur.get(cur.size()-1).readEnd >= a.readEnd)
-		{
-			// Contained in a previous alignment
-			continue;
-		}
-		else if(cur.size() >= 2 && cur.get(cur.size() - 2).readEnd > a.readStart)
-		{
-			// Overlaps last two alignments
-			cur.remove(cur.size()-1);
-			if(cur.size() >= 2)
-			{
-				res.add((ArrayList<SortablePafAlignment>) cur.clone());
-			}
-			cur.clear();
-		}
-		else if(cur.size() >= 1 && cur.get(cur.size() - 1).readEnd + 100000 < a.readStart)
-		{
-			if(cur.size() >= 2)
-			{
-				res.add((ArrayList<SortablePafAlignment>) cur.clone());
-			}
-			cur.clear();
-			cur.add(a);
-		}
-		else
-		{
-			// Valid continuation of chain
-			cur.add(a);
-		}
-	}
-	
-	// Add leftover chain
-	if(cur.size() >= 2)
-	{
-		res.add(cur);
-	}
-	
-	return res;
-}
-
-/*
- * Alignment of a contig to an ultralong read - sortable by start position in the read 
- */
-static class SortablePafAlignment implements Comparable<SortablePafAlignment>
-{
-	String readName, contigName;
-	int readLength, readStart, readEnd;
-	int contigLength, contigStart, contigEnd;
-	int mapq;
-	char strand;
-	String line;
-	// Call with a second parameter to denote that read and contig were flipped when calling minimap2
-	SortablePafAlignment(String line, int backwards)
-	{
-		this.line = line;
-		String[] ss = line.split("\t");
-		contigName = ss[0];
-		contigLength = Integer.parseInt(ss[1]);
-		contigStart = Integer.parseInt(ss[2]);
-		contigEnd = Integer.parseInt(ss[3]);
-		strand = ss[4].charAt(0);
-		readName = ss[5];
-		readLength = Integer.parseInt(ss[6]);
-		readStart = Integer.parseInt(ss[7]);
-		readEnd = Integer.parseInt(ss[8]);
-		mapq = Integer.parseInt(ss[11]);
-	}
-	SortablePafAlignment(String line)
-	{
-		this.line = line;
-		String[] ss = line.split("\t");
-		readName = ss[0];
-		readLength = Integer.parseInt(ss[1]);
-		readStart = Integer.parseInt(ss[2]);
-		readEnd = Integer.parseInt(ss[3]);
-		strand = ss[4].charAt(0);
-		contigName = ss[5];
-		contigLength = Integer.parseInt(ss[6]);
-		contigStart = Integer.parseInt(ss[7]);
-		contigEnd = Integer.parseInt(ss[8]);
-		mapq = Integer.parseInt(ss[11]);
-	}
-
-	public int compareTo(SortablePafAlignment o) {
-		if(readStart != o.readStart)
-		{
-			return readStart - o.readStart;
-		}
-		return readEnd - o.readEnd;
-	}
-	SortablePafAlignment copy()
-	{
-		SortablePafAlignment res = new SortablePafAlignment(line);
-		if(!res.contigName.equals(contigName)) res.contigName = contigName;
-		if(res.contigStart != contigStart) res.contigStart = contigStart;
-		if(res.contigLength != contigLength) res.contigLength = contigLength;
-		if(res.contigEnd != contigEnd) res.contigEnd = contigEnd;
-		return res;
-	}
-	
-}
 }

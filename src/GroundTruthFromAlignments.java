@@ -284,7 +284,7 @@ static class AlignmentIndex
 		{
 			return;
 		}
-		IncludeContained.SortablePafAlignment spa = new IncludeContained.SortablePafAlignment(line);
+		SortablePafAlignment spa = new SortablePafAlignment(line);
 		addInit(contigToAlignments, spa.contigName, n);
 		addInit(readToAlignments, spa.readName, n);
 		reads.add(spa.readName);

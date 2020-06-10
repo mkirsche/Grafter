@@ -35,17 +35,17 @@ public class CorrectMisassemblies {
  * Finds inversions based on alignments of contigs to ultralong reads
  * An inversion is defined as the alignments from a contig changing strand
  */
-static ArrayList<NovelAdjacency> findInversions(ArrayList<IncludeContained.SortablePafAlignment> alignments)
+static ArrayList<NovelAdjacency> findInversions(ArrayList<SortablePafAlignment> alignments)
 {
 	ArrayList<NovelAdjacency> res = new ArrayList<>();
 	
 	int n = alignments.size();
 
 	// Group by contig name, and sort each group by contig start position
-	Comparator<IncludeContained.SortablePafAlignment> byContigName = new Comparator<IncludeContained.SortablePafAlignment>() {
+	Comparator<SortablePafAlignment> byContigName = new Comparator<SortablePafAlignment>() {
 
 		@Override
-		public int compare(IncludeContained.SortablePafAlignment a, IncludeContained.SortablePafAlignment b) {
+		public int compare(SortablePafAlignment a, SortablePafAlignment b) {
 			if(a.contigName.equals(b.contigName))
 			{
 				return a.contigStart - b.contigStart;
@@ -67,7 +67,7 @@ static ArrayList<NovelAdjacency> findInversions(ArrayList<IncludeContained.Sorta
 		// Now alignments[i:j) has all the alignments of this contig - look for changes in strand
 		for(int k = i+1; k<j; k++)
 		{
-			IncludeContained.SortablePafAlignment last = alignments.get(k-1), cur = alignments.get(k);
+			SortablePafAlignment last = alignments.get(k-1), cur = alignments.get(k);
 			
 			// Make sure the alignments are close together on the contig
 			if(last.strand != cur.strand && cur.contigStart < last.contigEnd + buffer && cur.readStart < last.readEnd + buffer)
@@ -91,17 +91,17 @@ static ArrayList<NovelAdjacency> findInversions(ArrayList<IncludeContained.Sorta
  * Takes all alignments to a read and looks for evidence of chimeric contigs
  * This is where the middle of one contig should align to a different contig rather than the rest of its given contig
  */
-static ArrayList<NovelAdjacency> findChimeras(ArrayList<IncludeContained.SortablePafAlignment> alignments)
+static ArrayList<NovelAdjacency> findChimeras(ArrayList<SortablePafAlignment> alignments)
 {
 	ArrayList<NovelAdjacency> res = new ArrayList<NovelAdjacency>();
 	
 	// Combine alignments of the same contig to a single read, but do not filter out invalid ones
-	ArrayList<IncludeContained.SortablePafAlignment> compressed = IncludeContained.compress(alignments, false);
+	ArrayList<SortablePafAlignment> compressed = AlignmentGatherer.compress(alignments, false);
 	if(compressed.size() < 2) return res;
-	IncludeContained.SortablePafAlignment last = compressed.get(0);
+	SortablePafAlignment last = compressed.get(0);
 	for(int i = 1; i < compressed.size(); i++)
 	{
-		IncludeContained.SortablePafAlignment cur = compressed.get(i);
+		SortablePafAlignment cur = compressed.get(i);
 		
 		boolean lastPrefix = last.strand == '-';
 		boolean curPrefix = cur.strand == '+';
@@ -145,7 +145,7 @@ static ArrayList<NovelAdjacency> findChimeras(ArrayList<IncludeContained.Sortabl
  * In this case, it may make sense to break the contig at that position
  * Note that strict thresholds are used here because the alignments are noisy and easily interrupted by repeats
  */
-static ArrayList<NovelAdjacency> findSplitAlignments(HashMap<String, ArrayList<IncludeContained.SortablePafAlignment>> byContig)
+static ArrayList<NovelAdjacency> findSplitAlignments(HashMap<String, ArrayList<SortablePafAlignment>> byContig)
 {
 	int maxEndpointDist = 100;
 	ArrayList<NovelAdjacency> res = new ArrayList<>();
@@ -155,8 +155,8 @@ static ArrayList<NovelAdjacency> findSplitAlignments(HashMap<String, ArrayList<I
 		TreeMap<Integer, Double> endpointWeights = new TreeMap<>();
 		TreeMap<Integer, Integer> endpointFrequency = new TreeMap<>();
 		TreeMap<Integer, String> readSupport = new TreeMap<Integer, String>();
-		ArrayList<IncludeContained.SortablePafAlignment> als = byContig.get(contigName);
-		for(IncludeContained.SortablePafAlignment spa : als)
+		ArrayList<SortablePafAlignment> als = byContig.get(contigName);
+		for(SortablePafAlignment spa : als)
 		{
 			double curWeight = spa.contigEnd - spa.contigStart;
 			int[] ends = new int[] {spa.contigStart, spa.contigEnd};
@@ -211,19 +211,19 @@ static ArrayList<NovelAdjacency> findSplitAlignments(HashMap<String, ArrayList<I
 	
 	return res;
 }
-static boolean check(NovelAdjacency na, HashMap<String, ArrayList<IncludeContained.SortablePafAlignment>> byContig)
+static boolean check(NovelAdjacency na, HashMap<String, ArrayList<SortablePafAlignment>> byContig)
 {
 	double evidence = 0.0;
-	ArrayList<IncludeContained.SortablePafAlignment> contig1aln = byContig.get(na.contig1);
-	for(IncludeContained.SortablePafAlignment spa : contig1aln)
+	ArrayList<SortablePafAlignment> contig1aln = byContig.get(na.contig1);
+	for(SortablePafAlignment spa : contig1aln)
 	{
 		if(spa.contigStart < na.pos1 - 10000 && spa.contigEnd > na.pos1 + 10000)
 		{
 			evidence += harmonicMean(na.pos1 - spa.contigStart, spa.contigEnd - na.pos1);
 		}
 	}
-	ArrayList<IncludeContained.SortablePafAlignment> contig2aln = byContig.get(na.contig2);
-	for(IncludeContained.SortablePafAlignment spa : contig2aln)
+	ArrayList<SortablePafAlignment> contig2aln = byContig.get(na.contig2);
+	for(SortablePafAlignment spa : contig2aln)
 	{
 		if(spa.contigStart < na.pos2 && spa.contigEnd > na.pos2)
 		{
@@ -238,7 +238,7 @@ static boolean check(NovelAdjacency na, HashMap<String, ArrayList<IncludeContain
  * Given a list of novel adjacencies, combine those between the same contigs which are at very similar positions
  * Also, filter out those which have a lot of alignments spanning their supposed split points 
  */
-static ArrayList<NovelAdjacency> compressAndFilter(ArrayList<NovelAdjacency> nas, boolean filter, HashMap<String, ArrayList<IncludeContained.SortablePafAlignment>> byContig)
+static ArrayList<NovelAdjacency> compressAndFilter(ArrayList<NovelAdjacency> nas, boolean filter, HashMap<String, ArrayList<SortablePafAlignment>> byContig)
 {
 	ArrayList<NovelAdjacency> res = new ArrayList<NovelAdjacency>();
 	for(int i = 0; i<nas.size(); i++)
@@ -273,9 +273,9 @@ static ArrayList<NovelAdjacency> compressAndFilter(ArrayList<NovelAdjacency> nas
 	}
 	return res;
 }
-static ArrayList<NovelAdjacency> findMisassemblies(HashMap<String, ArrayList<IncludeContained.SortablePafAlignment>> alignmentsPerRead)
+static ArrayList<NovelAdjacency> findMisassemblies(HashMap<String, ArrayList<SortablePafAlignment>> alignmentsPerRead)
 {
-	HashMap<String, ArrayList<IncludeContained.SortablePafAlignment>> byContig = reindex(alignmentsPerRead);
+	HashMap<String, ArrayList<SortablePafAlignment>> byContig = reindex(alignmentsPerRead);
 	ArrayList<NovelAdjacency> corrections = new ArrayList<CorrectMisassemblies.NovelAdjacency>();
 	for(String s : alignmentsPerRead.keySet())
 	{
@@ -306,17 +306,17 @@ static double harmonicMean(double x, double y)
 /*
  * Take a set of alignments grouped by read and instead group them by contig
  */
-static HashMap<String, ArrayList<IncludeContained.SortablePafAlignment>> reindex(HashMap<String, ArrayList<IncludeContained.SortablePafAlignment>> alignments)
+static HashMap<String, ArrayList<SortablePafAlignment>> reindex(HashMap<String, ArrayList<SortablePafAlignment>> alignments)
 {
-	HashMap<String, ArrayList<IncludeContained.SortablePafAlignment>> res = new HashMap<>();
+	HashMap<String, ArrayList<SortablePafAlignment>> res = new HashMap<>();
 	
 	for(String s : alignments.keySet())
 	{
-		ArrayList<IncludeContained.SortablePafAlignment> curList = alignments.get(s);
-		for(IncludeContained.SortablePafAlignment spa : curList)
+		ArrayList<SortablePafAlignment> curList = alignments.get(s);
+		for(SortablePafAlignment spa : curList)
 		{
 			String newKey = spa.contigName;
-			ReadUtils.addInit(res, newKey, spa);
+			ReadUtils.addToMap(res, newKey, spa);
 		}
 	}
 	return res;
@@ -382,19 +382,19 @@ static class NovelAdjacency implements Comparable<NovelAdjacency>
 		return pos1 - o.pos1;
 	}
 }
-static HashMap<String, ArrayList<IncludeContained.SortablePafAlignment>> remapAll(ContigBreaker splitter, HashMap<String, ArrayList<IncludeContained.SortablePafAlignment>> alignmentsPerRead)
+static HashMap<String, ArrayList<SortablePafAlignment>> remapAll(ContigBreaker splitter, HashMap<String, ArrayList<SortablePafAlignment>> alignmentsPerRead)
 {
-	HashMap<String, ArrayList<IncludeContained.SortablePafAlignment>> res = new HashMap<>();
+	HashMap<String, ArrayList<SortablePafAlignment>> res = new HashMap<>();
 	for(String readName : alignmentsPerRead.keySet())
 	{
-		for(IncludeContained.SortablePafAlignment spa : alignmentsPerRead.get(readName))
+		for(SortablePafAlignment spa : alignmentsPerRead.get(readName))
 		{
-			IncludeContained.SortablePafAlignment cur = splitter.remap(spa);
+			SortablePafAlignment cur = splitter.remap(spa);
 			if(cur == null)
 			{
 				continue;
 			}
-			ReadUtils.addInit(res, readName, cur);
+			ReadUtils.addToMap(res, readName, cur);
 		}
 	}
 	return res;
@@ -421,7 +421,7 @@ static class ContigBreaker
 		{
 			if(na.pos1 > buffer && na.pos1 + buffer < na.length1)
 			{
-				ReadUtils.addInit(breakPositionMap, na.contig1, na.pos1);
+				ReadUtils.addToMap(breakPositionMap, na.contig1, na.pos1);
 				lengthMap.put(na.contig1, na.length1);
 			}
 			if(na.contig2.equals(na.contig1) && na.pos1 == na.pos2)
@@ -430,7 +430,7 @@ static class ContigBreaker
 			}
 			if(na.pos2 > buffer && na.pos2 + buffer < na.length2)
 			{
-				ReadUtils.addInit(breakPositionMap, na.contig2, na.pos2);
+				ReadUtils.addToMap(breakPositionMap, na.contig2, na.pos2);
 				lengthMap.put(na.contig2, na.length2);
 			}
 		}
@@ -460,9 +460,9 @@ static class ContigBreaker
 		}
 		return false;
 	}
-	IncludeContained.SortablePafAlignment remap(IncludeContained.SortablePafAlignment old)
+	SortablePafAlignment remap(SortablePafAlignment old)
 	{
-		IncludeContained.SortablePafAlignment res = old.copy();
+		SortablePafAlignment res = old.copy();
 		if(!subcontigMap.containsKey(old.contigName))
 		{
 			return res;

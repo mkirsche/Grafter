@@ -1,6 +1,6 @@
 import java.util.*;
 
-public class FreqqyMap {
+public class ContigKmerFrequencyMap {
 
 	// Map contig name to cumulative sum array of its kmer frequencies
 	HashMap<String, long[]> contigToFreqSum;
@@ -18,7 +18,7 @@ public class FreqqyMap {
 	
 	int totalLength = 0;
 	
-	FreqqyMap(HashMap<String, String> seqMap, int k)
+	ContigKmerFrequencyMap(HashMap<String, String> seqMap, int k)
 	{
 		this.k = k;
 		kmerFrequencies = new int[1<<(2*k)];
@@ -28,12 +28,12 @@ public class FreqqyMap {
 		buildSumArrays(seqMap);
 	}
 	
-	FreqqyMap(HashMap<String, String> seqMap)
+	ContigKmerFrequencyMap(HashMap<String, String> seqMap)
 	{
 		this(seqMap, defaultK);
 	}
 	
-	FreqqyMap()
+	ContigKmerFrequencyMap()
 	{
 		k = defaultK;
 		kmerFrequencies = new int[1<<(2*k)];

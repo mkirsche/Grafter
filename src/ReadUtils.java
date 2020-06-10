@@ -6,7 +6,7 @@ public class ReadUtils {
 /*
  * Add a key, value pair to a map from string to list, but initialize list if it's not already there
  */
-static <T> void addInit(HashMap<String, ArrayList<T>> map, String key, T val)
+static <T> void addToMap(HashMap<String, ArrayList<T>> map, String key, T val)
 {
 	if(!map.containsKey(key)) map.put(key, new ArrayList<T>());
 	map.get(key).add(val);

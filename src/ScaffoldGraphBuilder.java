@@ -59,11 +59,11 @@ public class ScaffoldGraphBuilder {
 				{
 					if(a.myContigPrefix)
 					{
-						ReadUtils.addInit(prefEdges, a.to, a);
+						ReadUtils.addToMap(prefEdges, a.to, a);
 					}
 					else
 					{
-						ReadUtils.addInit(suffEdges, a.to, a);
+						ReadUtils.addToMap(suffEdges, a.to, a);
 					}
 				}
 				
@@ -120,11 +120,11 @@ public class ScaffoldGraphBuilder {
 		{
 			if(a.myContigPrefix)
 			{
-				ReadUtils.addInit(prefEdges, a.to, a);
+				ReadUtils.addToMap(prefEdges, a.to, a);
 			}
 			else
 			{
-				ReadUtils.addInit(suffEdges, a.to, a);
+				ReadUtils.addToMap(suffEdges, a.to, a);
 			}
 		}
 		ArrayList<ScaffoldGraph.Alignment> best = null;
@@ -202,7 +202,7 @@ public class ScaffoldGraphBuilder {
 		
 		if(best == null || best.size() == 0) return null;
 		
-		if(best.size() < IncludeContained.minReadSupport || bestTotalWeight < IncludeContained.minWeightSupport) return null;
+		if(best.size() < Settings.MIN_READ_SUPPORT || bestTotalWeight < Settings.MIN_WEIGHT_SUPPORT) return null;
 		
 		
 		ScaffoldGraph.Alignment res = best.get(0);
