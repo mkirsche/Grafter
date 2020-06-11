@@ -2,22 +2,28 @@ import java.util.*;
 import java.io.*;
 
 public class StitchFasta {
+static void usage()
+{
+	System.out.println("java -cp src StitchFasta [contigs] [scaffolds] [outputfasta]");
+}
 @SuppressWarnings("resource")
 public static void main(String[] args) throws IOException
 {
-	System.err.println("Replacing contigs in assembly file with their scaffolds");
-	String fastaFn = "maternal_and_unknown.contigs.mmpoa.fa";
-	String extraFastaFn = "new_contigs.fa";
-	String outfn = "stitched.fa";
-	
+	String fastaFn = "", extraFastaFn = "", outFn = "";
 	if(args.length >= 3)
 	{
 		fastaFn = args[0];
 		extraFastaFn = args[1];
-		outfn = args[2];
+		outFn = args[2];
 	}
 	
-	PrintWriter out = new PrintWriter(new File(outfn));
+	else
+	{
+		usage();
+		System.exit(1);
+	}
+	
+	PrintWriter out = new PrintWriter(new File(outFn));
 	
 	HashSet<String> used = new HashSet<String>();
 	

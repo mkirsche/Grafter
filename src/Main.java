@@ -2,7 +2,7 @@ import java.util.*;
 
 import java.io.*;
 
-public class IncludeContained {
+public class Main {
 	
 	/*
 	 * Parse command line arguments
@@ -98,8 +98,8 @@ public class IncludeContained {
 	{
 		System.out.println();
 		System.out.println("Ultralong Scaffolding - including contained nodes");
-		System.out.println("Usage: java -cp src IncludeContained [args]");
-		System.out.println("  Example: java -cp src IncludeContained aln_fn=aln.paf fasta_fn=contigs.fasta read_fn=reads.fastq");
+		System.out.println("Usage: java -cp src Main [args]");
+		System.out.println("  Example: java -cp src Main aln_fn=aln.paf fasta_fn=contigs.fasta read_fn=reads.fastq");
 		System.out.println("    read_map_file=useful_reads.paf contig_map_file=useful_contigs.paf out_file=out.fasta");
 		System.out.println();
 		System.out.println("Required args:");
@@ -111,10 +111,10 @@ public class IncludeContained {
 		System.out.println("  contig_map_file (String) - Where to output sequences of relevant contigs");
 		System.out.println("  out_file        (String) - the name of the file to output the scaffolded contigs to");
 		System.out.println();
-		System.out.println("Optional args");
+		System.out.println("Optional args:");
 		System.out.println("  max_hanging (int)    [1000] - the maximum amount by which the end of a contig can exceed the alignment and still be joined");
 		System.out.println("  minq        (int)    [40]   - the minimum quality of alignments needed to be kept");
-		System.out.println("  graph_fn    (String) [none] - a GFA file containing an assembly graph, causing only alignments which are validated by the graph to be kept");
+		//System.out.println("  graph_fn    (String) [none] - a GFA file containing an assembly graph, causing only alignments which are validated by the graph to be kept");
 		System.out.println("  out_gfa_fn  (String) [none] - where to write the scaffold graph in GFA format");
 		System.out.println("  --break                     - allows original contigs to be broken");
 		System.out.println("  --reuse_relevant_seqs       - reuse files with sequences of relevant reads and contigs");
