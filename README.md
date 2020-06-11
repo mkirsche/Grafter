@@ -41,7 +41,7 @@ Optional args
   --reuse_relevant_seqs       - reuse files with sequences of relevant reads and contigs
 ```
 
-This produces a FASTA file with all scaffolds which consisted of 2 or more contigs, as well as any subcontigs which did not get rejoined if misassembly detection is enabled.  To obtain an updated assebly with contigs replaced by the scaffolds they are included in, run the following:
+This produces a FASTA file with all scaffolds which consisted of 2 or more contigs, as well as any subcontigs which did not get rejoined if misassembly detection is enabled.  To obtain an updated assembly with contigs replaced by the scaffolds they are included in, run the following:
 
 ``
 java -cp src StitchFasta [assembly_contigs.fa] [scaffolds.fa] [assembly_scaffolds.fa]
