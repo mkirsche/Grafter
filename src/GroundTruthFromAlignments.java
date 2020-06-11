@@ -2,7 +2,6 @@ import java.util.*;
 import java.io.*;
 
 public class GroundTruthFromAlignments {
-@SuppressWarnings("resource")
 public static void main(String[] args) throws IOException
 {
 	PrintWriter out = new PrintWriter(new File("debug.txt"));
@@ -264,7 +263,6 @@ static class AlignmentIndex
 	ArrayList<String> contigs;
 	ArrayList<String> lines;
 	int n;
-	@SuppressWarnings("resource")
 	AlignmentIndex(String fn) throws IOException
 	{
 		readToAlignments = new HashMap<>();
@@ -380,9 +378,7 @@ static class Mapping implements Comparable<Mapping>
 		contigLength = ll;
 		reversed = rr;
 	}
-	@Override
 	public int compareTo(Mapping o) {
-		// TODO Auto-generated method stub
 		if(chrStart != o.chrStart)
 		{
 			return chrStart - o.chrStart;
