@@ -30,6 +30,7 @@ public class OutputScaffolds {
 				out.printf("%s\t%s\t%s\t%s\t%s\t%s\n", "L", from, fromStrand, to, toStrand, "*");
 			}
 		}
+		out.close();
 	}
 	
 	/*

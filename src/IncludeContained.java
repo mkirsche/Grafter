@@ -43,6 +43,10 @@ public class IncludeContained {
 				{
 					Settings.graphFn = val;
 				}
+				if(field.equalsIgnoreCase("out_gfa_fn"))
+				{
+					Settings.outGfaFn = val;
+				}
 				if(field.equalsIgnoreCase("read_map_file"))
 				{
 					Settings.relevantReadSequenceFile = val;
@@ -111,6 +115,7 @@ public class IncludeContained {
 		System.out.println("  max_hanging (int)    [1000] - the maximum amount by which the end of a contig can exceed the alignment and still be joined");
 		System.out.println("  minq        (int)    [40]   - the minimum quality of alignments needed to be kept");
 		System.out.println("  graph_fn    (String) [none] - a GFA file containing an assembly graph, causing only alignments which are validated by the graph to be kept");
+		System.out.println("  out_gfa_fn  (String) [none] - where to write the scaffold graph in GFA format");
 		System.out.println("  --break                     - allows original contigs to be broken");
 		System.out.println("  --reuse_relevant_seqs       - reuse files with sequences of relevant reads and contigs");
 		System.out.println();
@@ -316,7 +321,10 @@ public static void main(String[] args) throws Exception
 	}
 	
 	// Output the contig overlap graph
-	OutputScaffolds.outputGfa("gfaFn", sg, contigSequences);
+	if(Settings.outGfaFn.length() > 0)
+	{
+		OutputScaffolds.outputGfa(Settings.outGfaFn, sg, contigSequences);
+	}
 	
 	/*
 	 * Run scaffolding on the graph

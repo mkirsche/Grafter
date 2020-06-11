@@ -17,7 +17,7 @@ public class Settings {
 	
 	static int MIN_ALIGNMENT_LENGTH = 3000;
 	
-	// The minimum aligment quality for an alignment to be kept
+	// The minimum alignment quality for an alignment to be kept
 	static int MIN_QUALITY = 40;
 	
 	static int MAX_GAP = 10000;
@@ -45,6 +45,9 @@ public class Settings {
 	
 	// File name of GFA file containing an existing assembly graph
 	static String graphFn = "";
+	
+	// Where to output the scaffold graph as a GFA file
+	static String outGfaFn = "";
 	
 	static boolean reuseRelevantSeqs = false;
 }
