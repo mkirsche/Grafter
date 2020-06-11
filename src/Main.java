@@ -97,7 +97,8 @@ public class Main {
 	static void usage()
 	{
 		System.out.println();
-		System.out.println("Ultralong Scaffolding - including contained nodes");
+		System.out.println("Grafter: A tool for scaffolding assemblies using alignments of ultralong reads");
+		System.out.println();
 		System.out.println("Usage: java -cp src Main [args]");
 		System.out.println("  Example: java -cp src Main aln_fn=aln.paf fasta_fn=contigs.fasta read_fn=reads.fastq");
 		System.out.println("    read_map_file=useful_reads.paf contig_map_file=useful_contigs.paf out_file=out.fasta");

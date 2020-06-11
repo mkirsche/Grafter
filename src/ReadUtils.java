@@ -32,7 +32,6 @@ static String reverseComplement(String s)
  * Reads a file consisting of pairs of string and produces
  * a map from the first string in each pair to the second
  */
-@SuppressWarnings("resource")
 static HashMap<String, String> readMap(String fn) throws IOException
 {
 	System.err.println("Reading map from " + fn);
