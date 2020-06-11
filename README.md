@@ -18,7 +18,8 @@ java -cp src Main <args>
 A usage menu can be viewed by running the program with no arguments, and is included below:
 
 ```
-Ultralong Scaffolding - including contained nodes
+Grafter: A tool for scaffolding assemblies using alignments of ultralong reads
+
 Usage: java -cp src Main [args]
   Example: java -cp src Main aln_fn=aln.paf fasta_fn=contigs.fasta read_fn=reads.fastq
     read_map_file=useful_reads.paf contig_map_file=useful_contigs.paf out_file=out.fasta
