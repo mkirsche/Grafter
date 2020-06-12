@@ -204,9 +204,9 @@ public static void main(String[] args) throws Exception
 	}
 	
 	// Output the contig overlap graph
-	if(Settings.outGfaFn.length() > 0)
+	if(Settings.fullOutGfaFn.length() > 0)
 	{
-		OutputScaffolds.outputGfa(Settings.outGfaFn, sg, contigSequences);
+		OutputScaffolds.outputGfa(Settings.fullOutGfaFn, sg, contigSequences);
 	}
 	
 	/*
@@ -218,6 +218,29 @@ public static void main(String[] args) throws Exception
 	HashSet<String> usedContigs = results.usedContigs;
 	
 	numMerged = results.numMerged;
+	
+	/*
+	 * Output GFA based on joins
+	 */
+	if(Settings.joinsOutGfaFn.length() > 0)
+	{
+		PrintWriter joinsOut = new PrintWriter(new File(Settings.joinsOutGfaFn));
+		joinsOut.println("H\t1.0");
+		for(String s : contigSequences.keySet())
+		{
+			joinsOut.println("S\t" + s + "\t*\tLN:" + contigSequences.get(s).length());
+		}
+		for(String from : scaffoldEdges.keySet())
+		{
+			for(ScaffoldGraph.Alignment aln : scaffoldEdges.get(from))
+			{
+				String to = aln.to;
+				char fromStrand = aln.myContigPrefix ? '-' : '+';
+				char toStrand = aln.theirContigPrefix ? '-' : '+';
+				out.printf("%s\t%s\t%s\t%s\t%s\t%s\n", "L", from, fromStrand, to, toStrand, "*");
+			}
+		}
+	}
 	
 	/*
 	 * Output all scaffolds consisting of multiple contigs

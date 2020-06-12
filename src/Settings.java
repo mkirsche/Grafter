@@ -47,7 +47,10 @@ public class Settings {
 	static String graphFn = "";
 	
 	// Where to output the scaffold graph as a GFA file
-	static String outGfaFn = "";
+	static String fullOutGfaFn = "";
+	
+	// Where to output the joins as a GFA file
+	static String joinsOutGfaFn = "";
 	
 	static boolean reuseRelevantSeqs = false;
 	
@@ -90,9 +93,13 @@ public class Settings {
 				{
 					Settings.graphFn = val;
 				}
-				if(field.equalsIgnoreCase("out_gfa_fn"))
+				if(field.equalsIgnoreCase("full_out_gfa_fn"))
 				{
-					Settings.outGfaFn = val;
+					Settings.fullOutGfaFn = val;
+				}
+				if(field.equalsIgnoreCase("joins_out_gfa_fn"))
+				{
+					Settings.joinsOutGfaFn = val;
 				}
 				if(field.equalsIgnoreCase("read_map_file"))
 				{
@@ -176,14 +183,15 @@ public class Settings {
 		System.out.println("  out_file        (String) - the name of the file to output the scaffolded contigs to");
 		System.out.println();
 		System.out.println("Optional args:");
-		System.out.println("  max_hanging     (int)    [1000]  - the maximum amount by which the end of a contig can exceed the alignment and still be joined");
-		System.out.println("  minq            (int)    [40]    - the minimum quality of alignments needed to be kept");
-		//System.out.println("  graph_fn        (String) [none] - a GFA file containing an assembly graph, causing only alignments which are validated by the graph to be kept");
-		System.out.println("  min_read_supp   (int)    [1]     - number of reads which need to support an edge");
-		System.out.println("  min_weight_supp (float)  [15000] - total weight required for a pair of contigs to be joined");
-		System.out.println("  min_weight      (float)  [1000]    - weight required for an overlap to count");
-		System.out.println("  min_length      (int)    [3000]  - minimum length of alignments required on each read");
-		System.out.println("  out_gfa_fn      (String) [none]  - where to write the scaffold graph in GFA format");
+		System.out.println("  max_hanging      (int)    [1000]  - the maximum amount by which the end of a contig can exceed the alignment and still be joined");
+		System.out.println("  minq             (int)    [40]    - the minimum quality of alignments needed to be kept");
+		//System.out.println("  graph_fn         (String) [none] - a GFA file containing an assembly graph, causing only alignments which are validated by the graph to be kept");
+		System.out.println("  min_read_supp    (int)    [1]     - number of reads which need to support an edge");
+		System.out.println("  min_weight_supp  (float)  [15000] - total weight required for a pair of contigs to be joined");
+		System.out.println("  min_weight       (float)  [1000]    - weight required for an overlap to count");
+		System.out.println("  min_length       (int)    [3000]  - minimum length of alignments required on each read");
+		System.out.println("  full_out_gfa_fn  (String) [none]  - where to write the scaffold graph in GFA format");
+		System.out.println("  joins_out__gfa_fn (String) [none]  - where to write the scaffold graph in GFA format");
 		System.out.println("  --break                          - allows original contigs to be broken");
 		System.out.println("  --reuse_relevant_seqs            - reuse files with sequences of relevant reads and contigs");
 		System.out.println();

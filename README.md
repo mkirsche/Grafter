@@ -35,13 +35,14 @@ Required args:
   out_file        (String) - the name of the file to output the scaffolded contigs to
 
 Optional args:
-  max_hanging     (int)    [1000]  - the maximum amount by which the end of a contig can exceed the alignment and still be joined
-  minq            (int)    [40]    - the minimum quality of alignments needed to be kept
-  min_read_supp   (int)    [1]     - number of reads which need to support an edge
-  min_weight_supp (float)  [15000] - total weight required for a pair of contigs to be joined
-  min_weight      (float)  [1000]    - weight required for an overlap to count
-  min_length      (int)    [3000]  - minimum length of alignments required on each read
-  out_gfa_fn      (String) [none]  - where to write the scaffold graph in GFA format
+  max_hanging      (int)    [1000]  - the maximum amount by which the end of a contig can exceed the alignment and still be joined
+  minq             (int)    [40]    - the minimum quality of alignments needed to be kept
+  min_read_supp    (int)    [1]     - number of reads which need to support an edge
+  min_weight_supp  (float)  [15000] - total weight required for a pair of contigs to be joined
+  min_weight       (float)  [1000]    - weight required for an overlap to count
+  min_length       (int)    [3000]  - minimum length of alignments required on each read
+  full_out_gfa_fn  (String) [none]  - where to write the scaffold graph in GFA format
+  joins_out__gfa_fn (String) [none]  - where to write the scaffold graph in GFA format
   --break                          - allows original contigs to be broken
   --reuse_relevant_seqs            - reuse files with sequences of relevant reads and contigs
 
