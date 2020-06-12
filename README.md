@@ -18,6 +18,7 @@ java -cp src Main <args>
 A usage menu can be viewed by running the program with no arguments, and is included below:
 
 ```
+
 Grafter: A tool for scaffolding assemblies using alignments of ultralong reads
 
 Usage: java -cp src Main [args]
@@ -33,13 +34,17 @@ Required args:
   contig_map_file (String) - Where to output sequences of relevant contigs
   out_file        (String) - the name of the file to output the scaffolded contigs to
 
-Optional args
-  max_hanging (int)    [1000] - the maximum amount by which the end of a contig can exceed the alignment and still be joined
-  minq        (int)    [40]   - the minimum quality of alignments needed to be kept
-  graph_fn    (String) [none] - a GFA file containing an assembly graph, causing only alignments which are validated by the graph to be kept
-  out_gfa_fn  (String) [none] - where to write the scaffold graph in GFA format
-  --break                     - allows original contigs to be broken
-  --reuse_relevant_seqs       - reuse files with sequences of relevant reads and contigs
+Optional args:
+  max_hanging     (int)    [1000]  - the maximum amount by which the end of a contig can exceed the alignment and still be joined
+  minq            (int)    [40]    - the minimum quality of alignments needed to be kept
+  min_read_supp   (int)    [1]     - number of reads which need to support an edge
+  min_weight_supp (float)  [15000] - total weight required for a pair of contigs to be joined
+  min_weight      (float)  [1000]    - weight required for an overlap to count
+  min_length      (int)    [3000]  - minimum length of alignments required on each read
+  out_gfa_fn      (String) [none]  - where to write the scaffold graph in GFA format
+  --break                          - allows original contigs to be broken
+  --reuse_relevant_seqs            - reuse files with sequences of relevant reads and contigs
+
 ```
 
 This produces a FASTA file with all scaffolds which consisted of 2 or more contigs, as well as any subcontigs which did not get rejoined if misassembly detection is enabled.  To obtain an updated assembly with contigs replaced by the scaffolds they are included in, run the following:
