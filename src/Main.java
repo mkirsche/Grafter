@@ -230,14 +230,18 @@ public static void main(String[] args) throws Exception
 		{
 			joinsOut.println("S\t" + s + "\t*\tLN:" + contigSequences.get(s).length());
 		}
-		for(String from : scaffoldEdges.keySet())
+		for(String contigKey : scaffoldEdges.keySet())
 		{
-			for(ScaffoldGraph.Alignment aln : scaffoldEdges.get(from))
+			ArrayDeque<String> curContigNames = scaffoldContigs.get(contigKey);
+			ArrayDeque<ScaffoldGraph.Alignment> curContigEdges = scaffoldEdges.get(contigKey);
+			String from = curContigNames.pollFirst();
+			for(ScaffoldGraph.Alignment aln : curContigEdges)
 			{
-				String to = aln.to;
+				String to = curContigNames.pollFirst();
 				char fromStrand = aln.myContigPrefix ? '-' : '+';
 				char toStrand = aln.theirContigPrefix ? '-' : '+';
 				out.printf("%s\t%s\t%s\t%s\t%s\t%s\n", "L", from, fromStrand, to, toStrand, "*");
+				from = to;
 			}
 		}
 	}
