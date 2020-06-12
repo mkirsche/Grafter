@@ -105,6 +105,11 @@ public static void main(String[] args) throws IOException
 			break;
 		}
 	}
+	if(print)
+	{
+		totLength += curLength;
+		contigLengths.add(curLength);
+	}
 	out.close();
 	
 	ReadUtils.assemblyStats(contigLengths, totLength);
