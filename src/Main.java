@@ -224,6 +224,7 @@ public static void main(String[] args) throws Exception
 	 */
 	for(String s : scaffoldContigs.keySet())
 	{
+        System.out.println("scaffold print: " + s);
 		String headerLine = OutputScaffolds.createHeaderLine(scaffoldContigs.get(s), splitter);
 		if(Settings.VERBOSE)
 		{
@@ -251,6 +252,7 @@ public static void main(String[] args) throws Exception
 		}
 	}
 	System.err.println("Number of joins: " + numMerged);
+    out.close();
 	
 	if(Settings.PRINT_ORIENT)
 	{

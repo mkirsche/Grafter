@@ -3,7 +3,7 @@ OUTDIR=`pwd`
 readfilter=$1
 minq=$2
 newcontigsfile=$OUTDIR/'chm13_'$readfilter'_'$minq'_newscaffolds.fa'
-outfile=$OUTDIR/'chm13_'$readfilter'_'$minq'_newscaffolds.fa'
+outfile=$OUTDIR/'chm13_'$readfilter'_'$minq'_allscaffolds.fa'
 contigsfn='/scratch/groups/mschatz1/mkirsche/t2t-chm13.20200602.fasta'
 echo 'Compiling'
 javac $BINDIR/src/*.java
