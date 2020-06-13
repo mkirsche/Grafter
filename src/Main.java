@@ -220,33 +220,6 @@ public static void main(String[] args) throws Exception
 	numMerged = results.numMerged;
 	
 	/*
-	 * Output GFA based on joins
-	 */
-	if(Settings.joinsOutGfaFn.length() > 0)
-	{
-		PrintWriter joinsOut = new PrintWriter(new File(Settings.joinsOutGfaFn));
-		joinsOut.println("H\t1.0");
-		for(String s : contigSequences.keySet())
-		{
-			joinsOut.println("S\t" + s + "\t*\tLN:" + contigSequences.get(s).length());
-		}
-		for(String contigKey : scaffoldEdges.keySet())
-		{
-			ArrayDeque<String> curContigNames = scaffoldContigs.get(contigKey);
-			ArrayDeque<ScaffoldGraph.Alignment> curContigEdges = scaffoldEdges.get(contigKey);
-			String from = curContigNames.pollFirst();
-			for(ScaffoldGraph.Alignment aln : curContigEdges)
-			{
-				String to = curContigNames.pollFirst();
-				char fromStrand = aln.myContigPrefix ? '-' : '+';
-				char toStrand = aln.theirContigPrefix ? '-' : '+';
-				out.printf("%s\t%s\t%s\t%s\t%s\t%s\n", "L", from, fromStrand, to, toStrand, "*");
-				from = to;
-			}
-		}
-	}
-	
-	/*
 	 * Output all scaffolds consisting of multiple contigs
 	 */
 	for(String s : scaffoldContigs.keySet())
@@ -257,7 +230,6 @@ public static void main(String[] args) throws Exception
 			System.err.println(headerLine);
 		}
 		out.println(headerLine);
-		
 		String seq = merge(scaffoldContigs.get(s), scaffoldEdges.get(s), readSequences, contigSequences);
 		
 		out.println(seq);
@@ -284,7 +256,35 @@ public static void main(String[] args) throws Exception
 	{
 		OutputScaffolds.printOrientations(scaffoldEdges, splitter);
 	}
+
+    /*
+	 * Output GFA based on joins
+	 */
+	if(Settings.joinsOutGfaFn.length() > 0)
+	{
+		PrintWriter joinsOut = new PrintWriter(new File(Settings.joinsOutGfaFn));
+		joinsOut.println("H\t1.0");
+		for(String s : contigSequences.keySet())
+		{
+			joinsOut.println("S\t" + s + "\t*\tLN:" + contigSequences.get(s).length());
+		}
+		for(String contigKey : scaffoldEdges.keySet())
+		{
+			ArrayDeque<String> curContigNames = scaffoldContigs.get(contigKey);
+			ArrayDeque<ScaffoldGraph.Alignment> curContigEdges = scaffoldEdges.get(contigKey);
+			String from = curContigNames.pollFirst();
+			for(ScaffoldGraph.Alignment aln : curContigEdges)
+			{
+				String to = curContigNames.pollFirst();
+				char fromStrand = aln.myContigPrefix ? '-' : '+';
+				char toStrand = aln.theirContigPrefix ? '-' : '+';
+				out.printf("%s\t%s\t%s\t%s\t%s\t%s\n", "L", from, fromStrand, to, toStrand, "*");
+				from = to;
+			}
+		}
+	}
 	
+
 }
 
 /*
@@ -409,11 +409,11 @@ static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als, Cont
 				double avgFreq1 = freq.getAverageFrequency(last.contigName, last.contigStart-1, last.contigEnd-1);
 				double avgFreq2 = freq.getAverageFrequency(spa.contigName, spa.contigStart-1, spa.contigEnd-1);
 				double penalty = CorrectMisassemblies.harmonicMean(avgFreq1, avgFreq2);
-				System.out.println("repeat penalty: " + last.contigName+" "+spa.contigName+" "+penalty);
+				System.err.println("repeat penalty: " + last.contigName+" "+spa.contigName+" "+penalty);
 				weight /= penalty;
 				if(weight >= Settings.MIN_WEIGHT)
 				{
-					System.out.println("repeat penalty: " + last.contigName+" "+spa.contigName+" "+penalty);
+					System.err.println("repeat penalty: " + last.contigName+" "+spa.contigName+" "+penalty);
 					sg.addEdge(last.contigName, spa.contigName, last.readName, last.readEnd, spa.readStart, spa.readLength, lastReversed, !curReversed, weight);
 				}
 			}

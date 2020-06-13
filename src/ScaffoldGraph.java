@@ -51,7 +51,6 @@ public class ScaffoldGraph {
 					String firstContigInScaffold = lastToFirst.get(s);
 					ArrayDeque<String> allContigsInScaffold = res.scaffoldContigs.get(firstContigInScaffold);
 					ArrayDeque<ScaffoldGraph.Alignment> allEdgesInScaffold = res.scaffoldEdges.get(firstContigInScaffold);
-					System.out.println(s+" "+t+" "+firstContigInScaffold);
 					allContigsInScaffold.addLast(t);
 					allEdgesInScaffold.add(best);
 					
@@ -67,7 +66,6 @@ public class ScaffoldGraph {
 					res.scaffoldContigs.get(s).addLast(s);
 					res.scaffoldContigs.get(s).addLast(t);
 					res.scaffoldEdges.get(s).addLast(best);
-					
 					res.usedContigs.add(s);
 					res.usedContigs.add(t);
 					lastToFirst.put(t, s);
@@ -180,6 +178,7 @@ public class ScaffoldGraph {
 			res.numMerged++;
 			
 		}
+
 		return res;
 	}
 	
