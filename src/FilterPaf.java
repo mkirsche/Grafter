@@ -30,7 +30,7 @@ public static void main(String[] args) throws Exception
 	{
 		String line = input.nextLine();
 		String[] tokens = line.split("\t");
-		String contigName = tokens[6];
+		String contigName = tokens[5];
 		if(contigNames.contains(contigName))
 		{
 			out.println(line);
