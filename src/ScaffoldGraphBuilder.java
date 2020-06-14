@@ -72,10 +72,12 @@ public class ScaffoldGraphBuilder {
 					ArrayList<ScaffoldGraph.Alignment> al = prefEdges.get(to);
 					ArrayList<ScaffoldGraph.Alignment> valid = new ArrayList<>();
 					double totalWeight = 0;
+					ArrayList<ScaffoldGraph.ReadInterval> intervals = new ArrayList<ScaffoldGraph.ReadInterval>();
 					for(ScaffoldGraph.Alignment a : al)
 					{
 						totalWeight += a.weight;
 						valid.add(a);
+						intervals.add(new ScaffoldGraph.ReadInterval(a));
 					}
 					
 					if(valid.size() > 0)
@@ -83,6 +85,7 @@ public class ScaffoldGraphBuilder {
 						ScaffoldGraph.Alignment toAdd = valid.get(0);
 						toAdd.from = s;
 						toAdd.weight = totalWeight;
+						toAdd.allReads = intervals;
 						res.add(toAdd);
 					}
 					
@@ -92,16 +95,19 @@ public class ScaffoldGraphBuilder {
 					ArrayList<ScaffoldGraph.Alignment> valid = new ArrayList<>();
 					ArrayList<ScaffoldGraph.Alignment> al = suffEdges.get(to);
 					double totalWeight = 0;
+					ArrayList<ScaffoldGraph.ReadInterval> intervals = new ArrayList<ScaffoldGraph.ReadInterval>();
 					for(ScaffoldGraph.Alignment a : al)
 					{
 						totalWeight += a.weight;
 						valid.add(a);
+						intervals.add(new ScaffoldGraph.ReadInterval(a));
 					}
 					if(valid.size() > 0)
 					{
 						ScaffoldGraph.Alignment toAdd = valid.get(0);
 						toAdd.from = s;
 						toAdd.weight = totalWeight;
+						toAdd.allReads = intervals;
 						res.add(toAdd);
 					}
 				}
@@ -112,6 +118,7 @@ public class ScaffoldGraphBuilder {
 	/*
 	 * Gets the best alignment of another contig to follow a given contig
 	 */
+	/*
 	static ScaffoldGraph.Alignment consensus(String from, ArrayList<ScaffoldGraph.Alignment> als, HashSet<String> usedContigs, HashMap<String, ArrayDeque<ScaffoldGraph.Alignment>> scaffoldEdges, HashMap<String, String> lastToFirst)
 	{
 		HashMap<String, ArrayList<ScaffoldGraph.Alignment>> prefEdges = new HashMap<>();
@@ -209,4 +216,5 @@ public class ScaffoldGraphBuilder {
 		
 		return res;
 	}
+	*/
 }

@@ -52,6 +52,9 @@ public class Settings {
 	// Where to output the joins as a GFA file
 	static String joinsOutGfaFn = "";
 	
+	// Where to output read intervals being used in the joins
+	static String readMetadataFn = "";
+	
 	static boolean reuseRelevantSeqs = false;
 	
 	/*
@@ -100,6 +103,10 @@ public class Settings {
 				if(field.equalsIgnoreCase("joins_out_gfa_fn"))
 				{
 					Settings.joinsOutGfaFn = val;
+				}
+				if(field.equalsIgnoreCase("read_metadata_fn"))
+				{
+					Settings.readMetadataFn = val;
 				}
 				if(field.equalsIgnoreCase("read_map_file"))
 				{
@@ -191,9 +198,10 @@ public class Settings {
 		System.out.println("  min_weight       (float)  [1000]    - weight required for an overlap to count");
 		System.out.println("  min_length       (int)    [3000]  - minimum length of alignments required on each read");
 		System.out.println("  full_out_gfa_fn  (String) [none]  - where to write the scaffold graph in GFA format");
-		System.out.println("  joins_out__gfa_fn (String) [none]  - where to write the scaffold graph in GFA format");
-		System.out.println("  --break                          - allows original contigs to be broken");
-		System.out.println("  --reuse_relevant_seqs            - reuse files with sequences of relevant reads and contigs");
+		System.out.println("  joins_out_gfa_fn (String) [none]  - where to write the scaffold graph in GFA format");
+		System.out.println("  read_metadata_fn (String) [none]  - where to write the reads being used as a tsv");
+		System.out.println("  --break                           - allows original contigs to be broken");
+		System.out.println("  --reuse_relevant_seqs             - reuse files with sequences of relevant reads and contigs");
 		System.out.println();
 	}
 }

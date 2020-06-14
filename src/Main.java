@@ -273,11 +273,18 @@ public static void main(String[] args) throws Exception
 		for(String contigKey : scaffoldContigs.keySet())
 		{
 			ArrayDeque<String> curContigNames = scaffoldContigs.get(contigKey);
+			
+			// Make a copy of the contig name list to avoid emptying it
+			ArrayDeque<String> contigNamesCopy = new ArrayDeque<String>();
+			for(String contigName : curContigNames)
+			{
+				contigNamesCopy.addLast(contigName);
+			}
 			ArrayDeque<ScaffoldGraph.Alignment> curContigEdges = scaffoldEdges.get(contigKey);
-			String from = curContigNames.pollFirst();
+			String from = contigNamesCopy.pollFirst();
 			for(ScaffoldGraph.Alignment aln : curContigEdges)
 			{
-				String to = curContigNames.pollFirst();
+				String to = contigNamesCopy.pollFirst();
 				char fromStrand = aln.myContigPrefix ? '-' : '+';
 				char toStrand = aln.theirContigPrefix ? '+' : '-';
 				joinsOut.printf("%s\t%s\t%s\t%s\t%s\t%s\n", "L", from, fromStrand, to, toStrand, "*");
@@ -287,6 +294,26 @@ public static void main(String[] args) throws Exception
 		joinsOut.close();
 	}
 	
+	if(Settings.readMetadataFn.length() > 0)
+	{
+		PrintWriter metadataOut = new PrintWriter(new File(Settings.readMetadataFn));
+		metadataOut.println("READNAME\tSTART\tEND\tCONTIG_START\tCONTIG_END\tSEQUENCE_USED");
+		for(String contigKey : scaffoldContigs.keySet())
+		{
+			ArrayDeque<ScaffoldGraph.Alignment> curContigEdges = scaffoldEdges.get(contigKey);
+			for(ScaffoldGraph.Alignment aln : curContigEdges)
+			{
+				ArrayList<ScaffoldGraph.ReadInterval> intervals = aln.allReads;
+				for(int i = 0; i<intervals.size(); i++)
+				{
+					ScaffoldGraph.ReadInterval interval = intervals.get(i);
+					metadataOut.println(interval.readName + " \t" + interval.start + "\t" + interval.end + 
+							"\t" + interval.from + "\t" + interval.to + "\t" + (i == 0 ? "YES" : "NO"));
+				}
+			}
+		}
+		metadataOut.close();
+	}
 
 }
 

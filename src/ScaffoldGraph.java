@@ -33,6 +33,12 @@ public class ScaffoldGraph {
 				continue;
 			}
 			
+			// Once weights get too small, stop
+			if(best.weight < Settings.MIN_WEIGHT_SUPPORT)
+			{
+				break;
+			}
+			
 			String s = best.from;
 			
 			if(lastToFirst.containsKey(s) && res.scaffoldEdges.get(lastToFirst.get(s)).peekLast().theirContigPrefix == best.myContigPrefix)
@@ -182,6 +188,7 @@ public class ScaffoldGraph {
 		return res;
 	}
 	
+	/*
 	public Scaffolding scaffoldFromGraph()
 	{
 		Scaffolding res = new Scaffolding();
@@ -346,6 +353,7 @@ public class ScaffoldGraph {
 		}
 		return res;
 	}
+	*/
 	
 	HashMap<String,ArrayList<Alignment>[]> adj;
 	ScaffoldGraph()
@@ -389,6 +397,7 @@ static class Alignment implements Comparable<Alignment>
 	double weight;
 	int readLength;
 	String from;
+	ArrayList<ReadInterval> allReads;
 	Alignment(String tt, String rr, int mre, int trs, boolean mcp, boolean tcp, int ss, double ww, int rl)
 	{
 		to = tt;
@@ -410,6 +419,33 @@ static class Alignment implements Comparable<Alignment>
 
 	public int compareTo(Alignment o) {
 		return Double.compare(o.weight, weight);
+	}
+}
+
+/*
+ * The interval of a read corresponding to an overlap - the contigs being linked are provided to denote the ordering of the endpoints of the interval
+ */
+static class ReadInterval
+{
+	String readName;
+	int start, end;
+	String from;
+	String to;
+	ReadInterval(String rr, int ss, int ee, String ff, String tt)
+	{
+		readName = rr;
+		start = ss;
+		end = ee;
+		from = ff;
+		to = tt;
+	}
+	ReadInterval(Alignment a)
+	{
+		readName = a.read;
+		start = a.myReadEnd;
+		end = a.theirReadStart;
+		to = a.to;
+		from = a.from;
 	}
 }
 }
