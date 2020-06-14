@@ -270,7 +270,7 @@ public static void main(String[] args) throws Exception
 		{
 			joinsOut.println("S\t" + s + "\t*\tLN:" + contigSequences.get(s).length());
 		}
-		for(String contigKey : scaffoldEdges.keySet())
+		for(String contigKey : scaffoldContigs.keySet())
 		{
 			ArrayDeque<String> curContigNames = scaffoldContigs.get(contigKey);
 			ArrayDeque<ScaffoldGraph.Alignment> curContigEdges = scaffoldEdges.get(contigKey);
@@ -279,8 +279,8 @@ public static void main(String[] args) throws Exception
 			{
 				String to = curContigNames.pollFirst();
 				char fromStrand = aln.myContigPrefix ? '-' : '+';
-				char toStrand = aln.theirContigPrefix ? '-' : '+';
-				out.printf("%s\t%s\t%s\t%s\t%s\t%s\n", "L", from, fromStrand, to, toStrand, "*");
+				char toStrand = aln.theirContigPrefix ? '+' : '-';
+				joinsOut.printf("%s\t%s\t%s\t%s\t%s\t%s\n", "L", from, fromStrand, to, toStrand, "*");
 				from = to;
 			}
 		}

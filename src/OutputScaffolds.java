@@ -26,7 +26,7 @@ public class OutputScaffolds {
 			{
 				String to = aln.to;
 				char fromStrand = aln.myContigPrefix ? '-' : '+';
-				char toStrand = aln.theirContigPrefix ? '-' : '+';
+				char toStrand = aln.theirContigPrefix ? '+' : '-';
 				out.printf("%s\t%s\t%s\t%s\t%s\t%s\n", "L", from, fromStrand, to, toStrand, "*");
 			}
 		}
