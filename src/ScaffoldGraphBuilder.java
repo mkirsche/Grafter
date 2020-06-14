@@ -77,6 +77,7 @@ public class ScaffoldGraphBuilder {
 					{
 						totalWeight += a.weight;
 						valid.add(a);
+						a.from = s;
 						intervals.add(new ScaffoldGraph.ReadInterval(a));
 					}
 					
@@ -100,6 +101,7 @@ public class ScaffoldGraphBuilder {
 					{
 						totalWeight += a.weight;
 						valid.add(a);
+						a.from = s;
 						intervals.add(new ScaffoldGraph.ReadInterval(a));
 					}
 					if(valid.size() > 0)
