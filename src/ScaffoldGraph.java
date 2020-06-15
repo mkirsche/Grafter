@@ -413,8 +413,10 @@ static class Alignment implements Comparable<Alignment>
 	
 	Alignment reverse(String from)
 	{
-		return new Alignment(from, read, readLength - theirReadStart, readLength - myReadEnd, 
+		Alignment res = new Alignment(from, read, readLength - theirReadStart, readLength - myReadEnd, 
 				theirContigPrefix, myContigPrefix, 1 - strand, weight, readLength);
+		res.allReads = allReads;
+		return res;
 	}
 
 	public int compareTo(Alignment o) {
