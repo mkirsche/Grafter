@@ -149,6 +149,10 @@ public class Settings {
 				{
 					Settings.MIN_READ_SUPPORT = Integer.parseInt(val);
 				}
+				if(field.equalsIgnoreCase("max_gap"))
+				{
+					Settings.MAX_GAP = Integer.parseInt(val);
+				}
 			}
 		}
 		if(Settings.pafFn.length() == 0 || Settings.fastaFn.length() == 0)
@@ -195,8 +199,9 @@ public class Settings {
 		//System.out.println("  graph_fn         (String) [none] - a GFA file containing an assembly graph, causing only alignments which are validated by the graph to be kept");
 		System.out.println("  min_read_supp    (int)    [1]     - number of reads which need to support an edge");
 		System.out.println("  min_weight_supp  (float)  [15000] - total weight required for a pair of contigs to be joined");
-		System.out.println("  min_weight       (float)  [1000]    - weight required for an overlap to count");
+		System.out.println("  min_weight       (float)  [1000]  - weight required for an overlap to count");
 		System.out.println("  min_length       (int)    [3000]  - minimum length of alignments required on each read");
+		System.out.println("  max_gap          (int)    [10000] - maximum gap that scaffolds will try to span");
 		System.out.println("  full_out_gfa_fn  (String) [none]  - where to write the scaffold graph in GFA format");
 		System.out.println("  joins_out_gfa_fn (String) [none]  - where to write the scaffold graph in GFA format");
 		System.out.println("  read_metadata_fn (String) [none]  - where to write the reads being used as a tsv");
