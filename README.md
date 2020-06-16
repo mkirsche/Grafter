@@ -39,12 +39,14 @@ Optional args:
   minq             (int)    [40]    - the minimum quality of alignments needed to be kept
   min_read_supp    (int)    [1]     - number of reads which need to support an edge
   min_weight_supp  (float)  [15000] - total weight required for a pair of contigs to be joined
-  min_weight       (float)  [1000]    - weight required for an overlap to count
+  min_weight       (float)  [1000]  - weight required for an overlap to count
   min_length       (int)    [3000]  - minimum length of alignments required on each read
+  max_gap          (int)    [10000] - maximum gap that scaffolds will try to span
   full_out_gfa_fn  (String) [none]  - where to write the scaffold graph in GFA format
-  joins_out__gfa_fn (String) [none]  - where to write the scaffold graph in GFA format
-  --break                          - allows original contigs to be broken
-  --reuse_relevant_seqs            - reuse files with sequences of relevant reads and contigs
+  joins_out_gfa_fn (String) [none]  - where to write the scaffold graph in GFA format
+  read_metadata_fn (String) [none]  - where to write the reads being used as a tsv
+  --break                           - allows original contigs to be broken
+  --reuse_relevant_seqs             - reuse files with sequences of relevant reads and contigs
 
 ```
 
