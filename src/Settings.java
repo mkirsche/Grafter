@@ -202,8 +202,8 @@ public class Settings {
 		System.out.println("  min_weight       (float)  [1000]  - weight required for an overlap to count");
 		System.out.println("  min_length       (int)    [3000]  - minimum length of alignments required on each read");
 		System.out.println("  max_gap          (int)    [10000] - maximum gap that scaffolds will try to span");
-		System.out.println("  full_out_gfa_fn  (String) [none]  - where to write the scaffold graph in GFA format");
-		System.out.println("  joins_out_gfa_fn (String) [none]  - where to write the scaffold graph in GFA format");
+		System.out.println("  full_out_gfa_fn  (String) [none]  - where to write the full scaffold graph in GFA format");
+		System.out.println("  joins_out_gfa_fn (String) [none]  - where to write the joins which get made in GFA format");
 		System.out.println("  read_metadata_fn (String) [none]  - where to write the reads being used as a tsv");
 		System.out.println("  --break                           - allows original contigs to be broken");
 		System.out.println("  --reuse_relevant_seqs             - reuse files with sequences of relevant reads and contigs");
