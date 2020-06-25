@@ -43,6 +43,7 @@ public class ContigKmerFrequencyMap {
 	
 	double getAverageFrequency(String name, int start, int end)
 	{
+		System.out.println(name);
 		long[] csum = contigToFreqSum.get(name);
 		int a = Math.max(0, start - k + 1);
 		int b = Math.min(contigLengths.get(name)-k-1, end);

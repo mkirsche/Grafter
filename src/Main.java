@@ -297,7 +297,7 @@ public static void main(String[] args) throws Exception
 	if(Settings.readMetadataFn.length() > 0)
 	{
 		PrintWriter metadataOut = new PrintWriter(new File(Settings.readMetadataFn));
-		metadataOut.println("READNAME\tSTART\tEND\tCONTIG_START\tCONTIG_END\tSEQUENCE_USED");
+		metadataOut.println("READNAME\tSTART\tEND\tCONTIG_START\tSTART_PREFIX\tCONTIG_END\tEND_PREFIX\tSEQUENCE_USED\tSTRAND");
 		for(String contigKey : scaffoldContigs.keySet())
 		{
 			ArrayDeque<ScaffoldGraph.Alignment> curContigEdges = scaffoldEdges.get(contigKey);
@@ -307,8 +307,11 @@ public static void main(String[] args) throws Exception
 				for(int i = 0; i<intervals.size(); i++)
 				{
 					ScaffoldGraph.ReadInterval interval = intervals.get(i);
+					boolean fromLeft = interval.from.equals(aln.from) ? aln.myContigPrefix : aln.theirContigPrefix;
+					boolean toLeft = interval.from.equals(aln.from) ? aln.theirContigPrefix : aln.myContigPrefix;
 					metadataOut.println(interval.readName + " \t" + interval.start + "\t" + interval.end + 
-							"\t" + interval.from + "\t" + interval.to + "\t" + (i == 0 ? "YES" : "NO"));
+							"\t" + interval.from + "\t" + (fromLeft ? "YES" : "NO") + "\t" 
+							+ interval.to + "\t" + (toLeft ? "YES" : "NO") + "\t" + (i == 0 ? "YES" : "NO") + "\t" + interval.strand);
 				}
 			}
 		}
@@ -439,11 +442,11 @@ static void addEdges(ScaffoldGraph sg, ArrayList<SortablePafAlignment> als, Cont
 				double avgFreq1 = freq.getAverageFrequency(last.contigName, last.contigStart-1, last.contigEnd-1);
 				double avgFreq2 = freq.getAverageFrequency(spa.contigName, spa.contigStart-1, spa.contigEnd-1);
 				double penalty = CorrectMisassemblies.harmonicMean(avgFreq1, avgFreq2);
-				System.err.println("repeat penalty: " + last.contigName+" "+spa.contigName+" "+penalty);
+				//System.err.println("repeat penalty: " + last.contigName+" "+spa.contigName+" "+penalty);
 				weight /= penalty;
 				if(weight >= Settings.MIN_WEIGHT)
 				{
-					System.err.println("repeat penalty: " + last.contigName+" "+spa.contigName+" "+penalty);
+					//System.err.println("repeat penalty: " + last.contigName+" "+spa.contigName+" "+penalty);
 					sg.addEdge(last.contigName, spa.contigName, last.readName, last.readEnd, spa.readStart, spa.readLength, lastReversed, !curReversed, weight);
 				}
 			}

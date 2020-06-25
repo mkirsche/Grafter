@@ -128,6 +128,14 @@ public class AlignmentGatherer {
 		}
 		
 		Collections.sort(filtered);
+		if(filtered.size() > 0)
+		{
+		System.err.println("Chain " + alignments.get(0).readName);
+		for(SortablePafAlignment spa : filtered)
+		{
+			System.err.println("  " + spa.readStart + " " + spa.readEnd + " " + spa.contigName + " " + spa.contigStart +" "+spa.contigEnd);
+		}
+		}
 		return filtered;
 	}
 
