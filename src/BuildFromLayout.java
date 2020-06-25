@@ -18,6 +18,7 @@ public class BuildFromLayout {
 	static String piecesFn = "";
 	static String ofn = "";
 	static String bedOfn = "";
+	static String layoutOfn = "";
 	
 	/*
 	 * Parse command line arguments
@@ -51,6 +52,10 @@ public class BuildFromLayout {
 				{
 					bedOfn = val;
 				}
+				else if(key.equalsIgnoreCase("layout_out"))
+				{
+					layoutOfn = val;
+				}
 				else if(key.equalsIgnoreCase("reads_file"))
 				{
 					readsFn = val;
@@ -62,7 +67,7 @@ public class BuildFromLayout {
 			}
 		}
 		
-		if(metadataFn.length() == 0 || layoutFn.length() == 0 || ofn.length() == 0 || bedOfn.length() == 0 || readsFn.length() == 0 || piecesFn.length() == 0)
+		if(metadataFn.length() == 0 || layoutFn.length() == 0 || ofn.length() == 0 || bedOfn.length() == 0 || readsFn.length() == 0 || piecesFn.length() == 0 || layoutOfn.length() == 0)
 		{
 			usage();
 			System.exit(1);
@@ -77,7 +82,7 @@ public class BuildFromLayout {
 		System.out.println();
 		System.out.println("Usage: java -cp src BuildFromLayout [args]");
 		System.out.println("  Example: java -cp src BuildFromLayout metadata_file=joins.tsv layout_file=layout.txt out_file=out.fasta");
-		System.out.println("    reads_file=reads.fastq pieces_file=pieces.fasta out_bed=joins.bed");
+		System.out.println("    reads_file=reads.fastq pieces_file=pieces.fasta out_bed=joins.bed layout_out=layout.bed");
 		System.out.println();
 		System.out.println("Required args:");
 		System.out.println("  metadata_file    (String) - a table with joins from Grafter and their supporting reads");
@@ -86,6 +91,7 @@ public class BuildFromLayout {
 		System.out.println("  pieces_file      (String) - the pieces in FASTA format");
 		System.out.println("  out_file         (String) - where to output the scaffolds in FASTA format");
 		System.out.println("  bed_out          (String) - where to output the BED file with supporting reads");
+		System.out.println("  bed_out          (String) - where to output the BED file with layout of the scaffold");
 		System.out.println();
 	}
 	
@@ -129,6 +135,7 @@ public class BuildFromLayout {
 		
 		PrintWriter out = new PrintWriter(new File(ofn));
 		PrintWriter bedOut = new PrintWriter(new File(bedOfn));
+		PrintWriter layoutOut = new PrintWriter(new File(layoutOfn));
 		
 		StringBuilder curSeq = new StringBuilder("");
 		int scaffolds = 0;
@@ -157,15 +164,6 @@ public class BuildFromLayout {
 			
 			Layout curLayout = layouts.get(i);
 
-			// Add this piece's sequence to the scaffold
-			String pieceSeq = pieceSeqs.get(curLayout.pieceName);
-			curSeq.append(revComp ? reverseComplement(pieceSeq) : pieceSeq);
-			
-			if(revComp)
-			{
-				System.err.println("Flipping " + curLayout.pieceName);
-			}
-			
 			startNewScaffold = true;
 			
 			// Try to join with the next sequence
@@ -185,19 +183,32 @@ public class BuildFromLayout {
 				String patchSeq = "";
 				
 				boolean nextRevComp = false;
+				
+				boolean readSeqFlipped = false;
+				int readStart = -1, readEnd = -1;
 								
 				for(Join j : joins)
 				{
 					if(j.contigStart.equals(lastContig) && j.contigEnd.equals(nextContig))
 					{
-						if(j.startPrefix == ((lastStrand == '-') ^ revComp))
+						if(startNewScaffold || j.startPrefix == ((lastStrand == '-') ^ revComp))
 						{
+							if(i == 0 && j.startPrefix != ((lastStrand == '-') ^ revComp))
+							{
+								revComp =  true;
+							}
 							nextRevComp |= j.endPrefix == (nextStrand == '-');
 							if(j.sequenceUsed)
 							{
 								startNewScaffold = false;
 								mainRead = j.readName;
 								String readSeq = readSeqs.get(j.readName);
+								if(j.start > j.end)
+								{
+									readSeqFlipped = true;
+								}
+								readStart = Math.min(j.start, j.end);
+								readEnd = Math.max(j.start, j.end);
 								patchSeq = j.start <= j.end ? readSeq.substring(j.start, j.end) : reverseComplement(readSeq.substring(j.end, j.start));
 							}
 							else
@@ -209,14 +220,24 @@ public class BuildFromLayout {
 					
 					else if(j.contigEnd.equals(lastContig) && j.contigStart.equals(nextContig))
 					{
-						if(j.endPrefix == ((lastStrand == '-') ^ revComp))
+						if(startNewScaffold || j.endPrefix == ((lastStrand == '-') ^ revComp))
 						{
+							if(startNewScaffold && j.endPrefix != ((lastStrand == '-') ^ revComp))
+							{
+								revComp =  true;
+							}
 							nextRevComp |= j.startPrefix == (nextStrand == '-');
 							if(j.sequenceUsed)
 							{
 								startNewScaffold = false;
 								mainRead = j.readName;
 								String readSeq = readSeqs.get(j.readName);
+								if(j.start > j.end)
+								{
+									readSeqFlipped = true;
+								}
+								readStart = Math.min(j.start, j.end);
+								readEnd = Math.max(j.start, j.end);
 								patchSeq = j.start <= j.end ? reverseComplement(readSeq.substring(j.start, j.end)) : reverseComplement(readSeq.substring(j.end, j.start));
 							}
 							else
@@ -227,7 +248,19 @@ public class BuildFromLayout {
 					}
 				}
 				
+				// Add this piece's sequence to the scaffold
+				String pieceSeq = pieceSeqs.get(curLayout.pieceName);
+				
+				String layoutToPrint = curLayout.pieceName + "\t" + 0 + "\t" + pieceSeq.length() + "\t.\t0\t" + (revComp ? '-' : '+');
+				
+				if(revComp)
+				{
+					System.err.println("Flipping " + curLayout.pieceName);
+				}
+				
+				curSeq.append(revComp ? reverseComplement(pieceSeq) : pieceSeq);
 				revComp = nextRevComp;
+				layoutOut.println(layoutToPrint);
 				
 				if(patchSeq.length() > 0)
 				{
@@ -243,6 +276,7 @@ public class BuildFromLayout {
 					{
 						supportingReadField = new StringBuilder(".");
 					}
+					layoutOut.println(mainRead + "\t" + readStart + "\t" + readEnd + "\t.\t0\t" + (readSeqFlipped ? '-' : '+'));
 					bedOut.println("scaffold" + String.format("%03d", scaffolds) + "\t" + patchStart + "\t" + patchEnd + "\t" + supportingReadField);
 					
 					curSeq.append(patchSeq);
@@ -259,6 +293,7 @@ public class BuildFromLayout {
 		
 		out.close();
 		bedOut.close();
+		layoutOut.close();
 		
 		System.err.println("Built " + scaffolds + " scaffolds");
 	}
