@@ -224,7 +224,7 @@ public static void main(String[] args) throws Exception
 	 */
 	for(String s : scaffoldContigs.keySet())
 	{
-        System.out.println("scaffold print: " + s);
+        //System.out.println("scaffold print: " + s);
 		String headerLine = OutputScaffolds.createHeaderLine(scaffoldContigs.get(s), splitter);
 		if(Settings.VERBOSE)
 		{
@@ -347,6 +347,7 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
 		int overlap = 0;
 		if(spa.myReadEnd < spa.theirReadStart)
 		{
+			System.out.println("Gap filling " + spa.from+" "+spa.to);
 			String readSeq = readMap.get(spa.read);
 			if(!spa.theirContigPrefix)
 			{

@@ -22,6 +22,8 @@ public class Settings {
 	
 	static int MAX_GAP = 10000;
 	
+	static int MAX_GAP_BETWEEN_CONTIGS = 100000;
+	
 	// File name of PAF file containing read-to-contig mappings
 	static String pafFn = "";
 	

@@ -130,11 +130,14 @@ public class AlignmentGatherer {
 		Collections.sort(filtered);
 		if(filtered.size() > 0)
 		{
-		System.err.println("Chain " + alignments.get(0).readName);
-		for(SortablePafAlignment spa : filtered)
-		{
-			System.err.println("  " + spa.readStart + " " + spa.readEnd + " " + spa.contigName + " " + spa.contigStart +" "+spa.contigEnd);
-		}
+			if(Settings.VERBOSE)
+			{
+				System.err.println("Chain " + alignments.get(0).readName);
+				for(SortablePafAlignment spa : filtered)
+				{
+					System.err.println("  " + spa.readStart + " " + spa.readEnd + " " + spa.contigName + " " + spa.contigStart +" "+spa.contigEnd);
+				}
+			}
 		}
 		return filtered;
 	}
@@ -190,7 +193,7 @@ public class AlignmentGatherer {
 				}
 				cur.clear();
 			}
-			else if(cur.size() >= 1 && cur.get(cur.size() - 1).readEnd + 100000 < a.readStart)
+			else if(cur.size() >= 1 && cur.get(cur.size() - 1).readEnd + Settings.MAX_GAP_BETWEEN_CONTIGS < a.readStart)
 			{
 				if(cur.size() >= 2)
 				{

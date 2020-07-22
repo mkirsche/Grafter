@@ -189,6 +189,11 @@ public class BuildFromLayout {
 								
 				for(Join j : joins)
 				{
+					if(j.strand == 1 && j.sequenceUsed)
+					{
+						j.start = readSeqs.get(j.readName).length() - j.start;
+						j.end = readSeqs.get(j.readName).length() - j.end;
+					}
 					if(j.contigStart.equals(lastContig) && j.contigEnd.equals(nextContig))
 					{
 						if(startNewScaffold || j.startPrefix == ((lastStrand == '-') ^ revComp))
@@ -200,6 +205,7 @@ public class BuildFromLayout {
 							nextRevComp |= j.endPrefix == (nextStrand == '-');
 							if(j.sequenceUsed)
 							{
+								System.err.println("A: " + j.start+" "+j.end);
 								startNewScaffold = false;
 								mainRead = j.readName;
 								String readSeq = readSeqs.get(j.readName);
@@ -229,6 +235,7 @@ public class BuildFromLayout {
 							nextRevComp |= j.startPrefix == (nextStrand == '-');
 							if(j.sequenceUsed)
 							{
+								System.err.println("B: " + j.start+" "+j.end);
 								startNewScaffold = false;
 								mainRead = j.readName;
 								String readSeq = readSeqs.get(j.readName);
@@ -238,7 +245,7 @@ public class BuildFromLayout {
 								}
 								readStart = Math.min(j.start, j.end);
 								readEnd = Math.max(j.start, j.end);
-								patchSeq = j.start <= j.end ? reverseComplement(readSeq.substring(j.start, j.end)) : reverseComplement(readSeq.substring(j.end, j.start));
+								patchSeq = j.start <= j.end ? reverseComplement(readSeq.substring(j.start, j.end)) : readSeq.substring(j.end, j.start);
 							}
 							else
 							{
@@ -282,6 +289,20 @@ public class BuildFromLayout {
 					curSeq.append(patchSeq);
 				}
 				
+			}
+			else
+			{
+				String pieceSeq = pieceSeqs.get(curLayout.pieceName);
+
+				String layoutToPrint = curLayout.pieceName + "\t" + 0 + "\t" + pieceSeq.length() + "\t.\t0\t" + (revComp ? '-' : '+');
+				
+				if(revComp)
+				{
+					System.err.println("Flipping " + curLayout.pieceName);
+				}
+				
+				curSeq.append(revComp ? reverseComplement(pieceSeq) : pieceSeq);
+				layoutOut.println(layoutToPrint);
 			}
 		}
 		
@@ -411,6 +432,7 @@ public class BuildFromLayout {
 		String contigStart, contigEnd;
 		boolean startPrefix, endPrefix;
 		boolean sequenceUsed;
+		int strand;
 		Join(String header, String line)
 		{
 			String[] headerTokens = header.split("\t");
@@ -448,6 +470,10 @@ public class BuildFromLayout {
 				else if(headerTokens[i].equals("SEQUENCE_USED"))
 				{
 					sequenceUsed = lineTokens[i].equalsIgnoreCase("yes");
+				}
+				else if(headerTokens[i].equals("STRAND"))
+				{
+					strand = Integer.parseInt(lineTokens[i]);
 				}
 			}
 		}
