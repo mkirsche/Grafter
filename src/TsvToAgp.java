@@ -254,24 +254,24 @@ public class TsvToAgp {
 				boolean lastPrefix = contigToIdx.get(lastj.contigStart).equals(at) ? lastj.startPrefix : lastj.endPrefix;
 				
 				String contigName = contigFrom;
-				int contigStart = (lastPrefix ? offset : 0) + 1;
+				int contigStart = (lastPrefix ? offset : 0);
 				int contigEnd = lastPrefix ? (fromLength - 1) : (fromLength - 1 - offset);
 				int sequenceLength = contigEnd - contigStart + 1;
 				String objectName = contigToScaffold.get(contigName);
-				int objectStart = scaffoldLengthSoFar + 1;
-				int objectEnd = scaffoldLengthSoFar + sequenceLength;
+				int objectStart = scaffoldLengthSoFar;
+				int objectEnd = scaffoldLengthSoFar + sequenceLength - 1;
 				scaffoldLengthSoFar += sequenceLength;
 				char orientation = lastPrefix ? '-' : '+';
 				partNum++;
 				out.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
 						objectName,
-						objectStart,
-						objectEnd,
+						objectStart + 1,
+						objectEnd + 1,
 						partNum,
 						"W",
 						contigName,
-						contigStart,
-						contigEnd,
+						contigStart + 1,
+						contigEnd + 1,
 						orientation
 				);
 				
@@ -280,14 +280,14 @@ public class TsvToAgp {
 				if(lastReadStart < lastReadEnd)
 				{
 					sequenceLength = lastReadEnd - lastReadStart;
-					objectStart = scaffoldLengthSoFar + 1;
-					objectEnd = scaffoldLengthSoFar + sequenceLength;
+					objectStart = scaffoldLengthSoFar;
+					objectEnd = scaffoldLengthSoFar + sequenceLength - 1;
 					scaffoldLengthSoFar += sequenceLength;
 					partNum++;
 					out.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
 							objectName,
-							objectStart,
-							objectEnd,
+							objectStart + 1,
+							objectEnd + 1,
 							partNum,
 							"W",
 							lastj.readName,
@@ -321,25 +321,25 @@ public class TsvToAgp {
 					boolean nextPrefix = contigToIdx.get(lastj.contigStart).equals(at) ? lastj.endPrefix : lastj.startPrefix;
 					
 					contigName = contigTo;
-					contigStart = (nextPrefix ? offset : 0) + 1;
+					contigStart = (nextPrefix ? offset : 0);
 					int toLength = contigLengths.get(contigTo); 
 					contigEnd = nextPrefix ? (toLength - 1) : (toLength - 1 - offset);
 					sequenceLength = contigEnd - contigStart + 1;
 					objectName = contigToScaffold.get(contigName);
-					objectStart = scaffoldLengthSoFar + 1;
-					objectEnd = scaffoldLengthSoFar + sequenceLength;
+					objectStart = scaffoldLengthSoFar;
+					objectEnd = scaffoldLengthSoFar + sequenceLength - 1;
 					scaffoldLengthSoFar += sequenceLength;
 					orientation = nextPrefix ? '+' : '-';
 					partNum++;
 					out.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
 							objectName,
-							objectStart,
-							objectEnd,
+							objectStart + 1,
+							objectEnd + 1,
 							partNum,
 							"W",
 							contigName,
-							contigStart,
-							contigEnd,
+							contigStart + 1,
+							contigEnd + 1,
 							orientation
 					);
 				}
