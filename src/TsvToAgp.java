@@ -309,7 +309,7 @@ public class TsvToAgp {
 					{
 						found = true;
 						q.add(to);
-						offsetq.add(Math.max(0, contigStart - contigEnd));
+						offsetq.add(Math.max(0, lastj.start - lastj.end));
 						joinq.add(j);
 						break;
 					}
@@ -317,6 +317,7 @@ public class TsvToAgp {
 				
 				if(!found)
 				{
+					offset = Math.max(0, lastj.start - lastj.end);
 					// This means we're on the last contig, so add that to the scaffold
 					boolean nextPrefix = contigToIdx.get(lastj.contigStart).equals(at) ? lastj.endPrefix : lastj.startPrefix;
 					
