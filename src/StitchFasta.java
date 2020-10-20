@@ -60,7 +60,12 @@ public static void main(String[] args) throws IOException
 				}
 			}
 			String contig = br.readLine();
-			out.println(">" + name);
+			out.print(">" + name);
+			for(int i = 1; i<line.length; i++)
+			{
+				out.print(" "+line[i]);
+			}
+			out.println();
 			contigLengths.add(contig.length());
 			totLength += contig.length();
 			printContig(out, contig);
