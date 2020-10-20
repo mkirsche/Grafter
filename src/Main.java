@@ -222,10 +222,12 @@ public static void main(String[] args) throws Exception
 	/*
 	 * Output all scaffolds consisting of multiple contigs
 	 */
+	int index = 1;
 	for(String s : scaffoldContigs.keySet())
 	{
         //System.out.println("scaffold print: " + s);
-		String headerLine = OutputScaffolds.createHeaderLine(scaffoldContigs.get(s), splitter);
+		String headerLine = OutputScaffolds.createHeaderLine(index, scaffoldContigs.get(s), splitter);
+		index++;
 		if(Settings.VERBOSE)
 		{
 			System.err.println(headerLine);
@@ -309,7 +311,13 @@ public static void main(String[] args) throws Exception
 					ScaffoldGraph.ReadInterval interval = intervals.get(i);
 					boolean fromLeft = interval.from.equals(aln.from) ? aln.myContigPrefix : aln.theirContigPrefix;
 					boolean toLeft = interval.from.equals(aln.from) ? aln.theirContigPrefix : aln.myContigPrefix;
-					metadataOut.println(interval.readName + " \t" + interval.start + "\t" + interval.end + 
+					int start = interval.start, end = interval.end;
+					if(interval.strand == 1)
+					{
+						start = interval.readLength - interval.end;
+						end = interval.readLength - interval.start;
+					}
+					metadataOut.println(interval.readName + " \t" + start + "\t" + end + 
 							"\t" + interval.from + "\t" + (fromLeft ? "YES" : "NO") + "\t" 
 							+ interval.to + "\t" + (toLeft ? "YES" : "NO") + "\t" + (i == 0 ? "YES" : "NO") + "\t" + interval.strand);
 				}

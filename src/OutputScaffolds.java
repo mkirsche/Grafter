@@ -4,7 +4,6 @@ import java.io.PrintWriter;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 
 public class OutputScaffolds {
 	
@@ -58,19 +57,12 @@ public class OutputScaffolds {
 
 	/*
 	 * Create a Fasta header line for a scaffold based on the names of contigs which make it up
-	 * format is >contigs1&contig2&... contig1 contig2 contig3 ...
+	 * format is >scaffold(index)_grafter contig1 contig2 contig3 ...
 	 */
-	static String createHeaderLine(ArrayDeque<String> contigs, CorrectMisassemblies.ContigBreaker splitter)
+	static String createHeaderLine(int index, ArrayDeque<String> contigs, CorrectMisassemblies.ContigBreaker splitter)
 	{
 		StringBuilder res = new StringBuilder("");
-		HashSet<String> contigSet = new HashSet<String>();
-		for(String s : contigs)
-		{
-			if(res.length() > 0) res.append("&");
-			else res.append(">");
-			res.append(s);
-			contigSet.add(s);
-		}
+		res.append(">scaffold" + index + "_grafter");
 		
 		for(String s : contigs)
 		{

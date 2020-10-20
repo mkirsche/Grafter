@@ -242,6 +242,7 @@ static class Alignment implements Comparable<Alignment>
 		strand = ss;
 		weight = ww;
 		this.readLength = rl;
+		this.allReads = new ArrayList<ReadInterval>();
 	}
 	
 	Alignment reverse(String from)
@@ -267,7 +268,8 @@ static class ReadInterval
 	String from;
 	String to;
 	int strand;
-	ReadInterval(String rr, int ss, int ee, String ff, String tt, int st)
+	int readLength;
+	ReadInterval(String rr, int ss, int ee, String ff, String tt, int st, int rl)
 	{
 		readName = rr;
 		start = ss;
@@ -275,6 +277,7 @@ static class ReadInterval
 		from = ff;
 		to = tt;
 		strand = st;
+		readLength = rl;
 	}
 	ReadInterval(Alignment a)
 	{
@@ -284,6 +287,7 @@ static class ReadInterval
 		to = a.to;
 		from = a.from;
 		strand = a.strand;
+		readLength = a.readLength;
 	}
 }
 }

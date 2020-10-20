@@ -1,3 +1,16 @@
 *.class
 scaffolding/*.class
 /bin/
+*.delta
+*.fa
+*.fasta
+*.tsv
+*.paf
+*.txt
+*.fastq
+*.fai
+*.out
+*.agp
+*.vcf
+*.gfa
+*.bed

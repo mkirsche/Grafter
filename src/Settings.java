@@ -190,7 +190,6 @@ public class Settings {
 		System.out.println("  aln_fn          (String) - a file containing the alignments of ultralong reads to contigs");
 		System.out.println("  fasta_fn        (String) - the contigs in FASTA format");
 		System.out.println("  read_fn         (String) - the ultralong reads in FASTQ format");
-		System.out.println("  outputbroken    (String) - where to output broken contigs");
 		System.out.println("  read_map_file   (String) - where to output sequences of relevant reads");
 		System.out.println("  contig_map_file (String) - Where to output sequences of relevant contigs");
 		System.out.println("  out_file        (String) - the name of the file to output the scaffolded contigs to");
@@ -198,7 +197,7 @@ public class Settings {
 		System.out.println("Optional args:");
 		System.out.println("  max_hanging      (int)    [1000]  - the maximum amount by which the end of a contig can exceed the alignment and still be joined");
 		System.out.println("  minq             (int)    [40]    - the minimum quality of alignments needed to be kept");
-		//System.out.println("  graph_fn         (String) [none] - a GFA file containing an assembly graph, causing only alignments which are validated by the graph to be kept");
+		System.out.println("  outputbroken    (String) - where to output broken contigs");
 		System.out.println("  min_read_supp    (int)    [1]     - number of reads which need to support an edge");
 		System.out.println("  min_weight_supp  (float)  [15000] - total weight required for a pair of contigs to be joined");
 		System.out.println("  min_weight       (float)  [1000]  - weight required for an overlap to count");

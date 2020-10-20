@@ -144,7 +144,7 @@ public static void main(String[] args) throws Exception
 		{
 			Position p = positions.get(s).get(i);
 			
-			if(p.contig.startsWith("tig"))
+			if(contigLengths.containsKey(p.contig))
 			{
 				bedOut.println(s+"\t"+p.start+"\t"+p.end+"\t"+p.contig);
 			}
