@@ -225,7 +225,7 @@ public static void main(String[] args) throws Exception
 	int index = 1;
 	for(String s : scaffoldContigs.keySet())
 	{
-        //System.out.println("scaffold print: " + s);
+        System.out.println("scaffold print: " + s + " " + scaffoldContigs.get(s).size());
 		String headerLine = OutputScaffolds.createHeaderLine(index, scaffoldContigs.get(s), splitter);
 		index++;
 		if(Settings.VERBOSE)
