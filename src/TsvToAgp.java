@@ -205,6 +205,8 @@ public class TsvToAgp {
 		
 		boolean[] visited = new boolean[n];
 		
+		boolean printed = false;
+		
 		for(int i = 0; i<n; i++)
 		{
 			if(visited[i])
@@ -263,7 +265,11 @@ public class TsvToAgp {
 				scaffoldLengthSoFar += sequenceLength;
 				char orientation = lastPrefix ? '-' : '+';
 				partNum++;
-				out.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+				if(printed)
+				{
+					out.println();
+				}
+				out.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
 						objectName,
 						objectStart + 1,
 						objectEnd + 1,
@@ -274,6 +280,7 @@ public class TsvToAgp {
 						contigEnd + 1,
 						orientation
 				);
+				printed = true;
 				
 				int lastReadStart = lastj.start;
 				int lastReadEnd = lastj.end;
@@ -284,7 +291,7 @@ public class TsvToAgp {
 					objectEnd = scaffoldLengthSoFar + sequenceLength - 1;
 					scaffoldLengthSoFar += sequenceLength;
 					partNum++;
-					out.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+					out.printf("\n%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
 							objectName,
 							objectStart + 1,
 							objectEnd + 1,
@@ -332,7 +339,7 @@ public class TsvToAgp {
 					scaffoldLengthSoFar += sequenceLength;
 					orientation = nextPrefix ? '+' : '-';
 					partNum++;
-					out.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+					out.printf("\n%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
 							objectName,
 							objectStart + 1,
 							objectEnd + 1,
@@ -350,7 +357,7 @@ public class TsvToAgp {
 		{
 			if(!contigToIdx.containsKey(s))
 			{
-				out.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+				out.printf("\n%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
 						s,
 						1,
 						contigLengths.get(s),
