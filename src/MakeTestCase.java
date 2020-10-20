@@ -6,6 +6,8 @@ public class MakeTestCase {
 	public static void main(String[] args) throws Exception
 	{
 		makeTest(1, 100000, 80000, 70000, 60000, 5000);
+		makeTest(2, 100000, 80000, 70000, 60000, 5000);
+
 	}
 	
 	static void makeTest(int testNum, int contigLen1, int contigLen2, int readC1, int readC2, int readOnlyLen) throws Exception
@@ -26,13 +28,20 @@ public class MakeTestCase {
 		out.println(">contig2");
 		out.println(ctg2);
 		out.println(">contig3");
-		out.println(ctg2);
+		out.println(ctg3);
 		out.close();
 		
 		String readSeq = ctg1.substring(ctg1.length() - readC1) + readOnly + ctg2.substring(0, readC2);
 		out = new PrintWriter(new File(readsFn));
 		out.println(">read1");
-		out.println(readSeq);
+		if(testNum%2 == 1)
+		{
+			out.println(readSeq);
+		}
+		else
+		{
+			out.println(ReadUtils.reverseComplement(readSeq));
+		}
 		out.close();
 		
 		String genome = ctg1 + readOnly + ctg2;
@@ -42,34 +51,69 @@ public class MakeTestCase {
 		out.close();
 		
 		out = new PrintWriter(new File(alnFn));
-		out.printf("%s\t%d\t%d\t%d\t%c\t%s\t%d\t%d\t%d\t%d\t%d\t%d\n", 
-				"read1",
-				readSeq.length(),
-				0,
-				readC1,
-				'+',
-				"contig1",
-				contigLen1,
-				ctg1.length() - readC1,
-				ctg1.length(),
-				0,
-				0,
-				60
-		);
-		out.printf("%s\t%d\t%d\t%d\t%c\t%s\t%d\t%d\t%d\t%d\t%d\t%d\n", 
-				"read1",
-				readSeq.length(),
-				readSeq.length() - readC2,
-				readSeq.length(),
-				'+',
-				"contig2",
-				contigLen2,
-				0,
-				readC2,
-				0,
-				0,
-				60
-		);
+		
+		if(testNum == 1)
+		{
+			out.printf("%s\t%d\t%d\t%d\t%c\t%s\t%d\t%d\t%d\t%d\t%d\t%d\n", 
+					"read1",
+					readSeq.length(),
+					0,
+					readC1,
+					'+',
+					"contig1",
+					contigLen1,
+					ctg1.length() - readC1,
+					ctg1.length(),
+					0,
+					0,
+					60
+			);
+			out.printf("%s\t%d\t%d\t%d\t%c\t%s\t%d\t%d\t%d\t%d\t%d\t%d\n", 
+					"read1",
+					readSeq.length(),
+					readSeq.length() - readC2,
+					readSeq.length(),
+					'+',
+					"contig2",
+					contigLen2,
+					0,
+					readC2,
+					0,
+					0,
+					60
+			);
+		}
+		else if(testNum == 2)
+		{
+			out.printf("%s\t%d\t%d\t%d\t%c\t%s\t%d\t%d\t%d\t%d\t%d\t%d\n", 
+					"read1",
+					readSeq.length(),
+					0,
+					readC2,
+					'-',
+					"contig2",
+					contigLen2,
+					0,
+					readC2,
+					0,
+					0,
+					60
+			);
+			out.printf("%s\t%d\t%d\t%d\t%c\t%s\t%d\t%d\t%d\t%d\t%d\t%d\n", 
+					"read1",
+					readSeq.length(),
+					readSeq.length() - readC1,
+					readSeq.length(),
+					'-',
+					"contig1",
+					contigLen1,
+					contigLen1 - readC1,
+					contigLen1,
+					0,
+					0,
+					60
+			);	
+		}
 		out.close();
 		
 	}

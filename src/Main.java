@@ -337,6 +337,7 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
 	boolean first = true;
 	for(ScaffoldGraph.Alignment spa : als)
 	{
+		System.out.println(first+" "+spa.from+" "+spa.to+" "+spa.strand+" "+spa.myReadEnd+" "+spa.theirReadStart+" "+spa.myContigPrefix+" "+spa.theirContigPrefix);
 		if(first)
 		{
 			first = false;
@@ -355,13 +356,15 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
 		int overlap = 0;
 		if(spa.myReadEnd < spa.theirReadStart)
 		{
-			System.out.println("Gap filling " + spa.from+" "+spa.to);
+			//System.out.println("Gap filling " + spa.from+" "+spa.to);
 			String readSeq = readMap.get(spa.read);
-			if(!spa.theirContigPrefix)
+			if(spa.strand == 1)
 			{
+				//System.out.println("rc read " + spa.myReadEnd+" "+spa.theirReadStart);
 				readSeq = ReadUtils.reverseComplement(readSeq);
 			}
-			res.append(readSeq.substring(spa.myReadEnd, spa.theirReadStart));
+			readSeq = readSeq.substring(spa.myReadEnd, spa.theirReadStart);
+			res.append(readSeq);
 		}
 		else
 		{
