@@ -254,10 +254,11 @@ public class TsvToAgp {
 				
 				// Whether the last edge's previous contig used its prefix
 				boolean lastPrefix = contigToIdx.get(lastj.contigStart).equals(at) ? lastj.startPrefix : lastj.endPrefix;
-				
+				boolean nextPrefix = contigToIdx.get(lastj.contigStart).equals(at) ? lastj.endPrefix : lastj.startPrefix;
+
 				String contigName = contigFrom;
-				int contigStart = (lastPrefix ? offset : 0);
-				int contigEnd = lastPrefix ? (fromLength - 1) : (fromLength - 1 - offset);
+				int contigStart = (nextPrefix ? offset : 0);
+				int contigEnd = nextPrefix ? (fromLength - 1) : (fromLength - 1 - offset);
 				int sequenceLength = contigEnd - contigStart + 1;
 				String objectName = contigToScaffold.get(contigName);
 				int objectStart = scaffoldLengthSoFar;
@@ -309,7 +310,7 @@ public class TsvToAgp {
 				boolean found = false;
 				for(Join j : graph[to])
 				{
-					boolean nextPrefix = contigToIdx.get(j.contigStart).equals(to) ? j.startPrefix : j.endPrefix;
+					nextPrefix = contigToIdx.get(j.contigStart).equals(to) ? j.startPrefix : j.endPrefix;
 					
 					// Look for an edge whch uses the opposite side of the current contig from what the last edge used
 					if(nextPrefix != curPrefix)
@@ -326,7 +327,7 @@ public class TsvToAgp {
 				{
 					offset = Math.max(0, lastj.start - lastj.end);
 					// This means we're on the last contig, so add that to the scaffold
-					boolean nextPrefix = contigToIdx.get(lastj.contigStart).equals(at) ? lastj.endPrefix : lastj.startPrefix;
+					nextPrefix = contigToIdx.get(lastj.contigStart).equals(at) ? lastj.endPrefix : lastj.startPrefix;
 					
 					contigName = contigTo;
 					contigStart = (nextPrefix ? offset : 0);
