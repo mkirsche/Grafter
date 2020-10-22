@@ -14,3 +14,10 @@ scaffolding/*.class
 *.vcf
 *.gfa
 *.bed
+.classpath
+.project
+buildchr*
+runchr*
+*.bat
+*.zip
+igv/

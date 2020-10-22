@@ -73,7 +73,7 @@ public class AlignmentGatherer {
 					cse[q] |= ccse[q];
 				}
 			}
-			
+						
 			/*
 			 * If the set of alignments had a large gap, ignore it 
 			 */
@@ -96,17 +96,13 @@ public class AlignmentGatherer {
 				i = j - 1;
 				continue;
 			}
-			else if(filterInvalid && !rse[0] && !rse[1])
+			else if(filterInvalid && !rse[0] && !rse[1] && (!cse[0] || !cse[1]))
 			{
 				/*
 				 * Neither end of the read is involved, so contig must be contained in the read
 				 * Filter out cases which don't reflect this
 				 */
-				if(!cse[0] || !cse[1])
-				{
-					i = j - 1;
-					continue;
-				}
+				continue;
 			}
 			else
 			{
