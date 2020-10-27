@@ -327,6 +327,8 @@ public static void main(String[] args) throws Exception
 						int tmp = interval.start;
 						interval.start = interval.readLength - interval.end;
 						interval.end = interval.readLength - tmp;
+						start = interval.start;
+						end = interval.end;
 					}
 					if(interval.strand == 1)
 					{
