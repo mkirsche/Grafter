@@ -309,6 +309,14 @@ public static void main(String[] args) throws Exception
 				for(int i = 0; i<intervals.size(); i++)
 				{
 					ScaffoldGraph.ReadInterval interval = intervals.get(i);
+					if(Settings.VERBOSE)
+					{
+						System.err.println("Making metadata table entry");
+						System.err.println("  Interval: name=" + interval.readName + ", from=" + interval.from +
+								", to=" + interval.to + ", strand=" + interval.strand);
+						System.err.println("  Alignment: from=" + aln.from + ", myContigPrefix=" + aln.myContigPrefix +
+								", to=" + aln.to + ", theirContigPrefix=" + aln.theirContigPrefix);
+					}
 					boolean fromLeft = interval.from.equals(aln.from) ? aln.myContigPrefix : aln.theirContigPrefix;
 					boolean toLeft = interval.from.equals(aln.from) ? aln.theirContigPrefix : aln.myContigPrefix;
 					int start = interval.start, end = interval.end;
@@ -337,7 +345,7 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
 	boolean first = true;
 	for(ScaffoldGraph.Alignment spa : als)
 	{
-		System.out.println(first+" "+spa.from+" "+spa.to+" "+spa.strand+" "+spa.myReadEnd+" "+spa.theirReadStart+" "+spa.myContigPrefix+" "+spa.theirContigPrefix);
+		//System.err.println(first+" "+spa.from+" "+spa.to+" "+spa.strand+" "+spa.myReadEnd+" "+spa.theirReadStart+" "+spa.myContigPrefix+" "+spa.theirContigPrefix);
 		if(first)
 		{
 			first = false;
@@ -351,7 +359,8 @@ static String merge(ArrayDeque<String> contigs, ArrayDeque<ScaffoldGraph.Alignme
 		}
 		if(Settings.VERBOSE)
 		{
-			System.err.println(spa.to+" "+spa.myContigPrefix+" "+spa.theirContigPrefix+" "+spa.myReadEnd+" "+spa.theirReadStart+" "+spa.strand+" "+spa.read + " " + spa.weight);
+			System.err.println("Merging with edge: ");
+			System.err.println("  " + spa.from + " " + spa.to+" "+spa.myContigPrefix+" "+spa.theirContigPrefix+" "+spa.myReadEnd+" "+spa.theirReadStart+" "+spa.strand+" "+spa.read + " " + spa.weight);
 		}
 		int overlap = 0;
 		if(spa.myReadEnd < spa.theirReadStart)

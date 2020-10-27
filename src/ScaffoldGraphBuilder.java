@@ -50,6 +50,10 @@ public class ScaffoldGraphBuilder {
 		PriorityQueue<ScaffoldGraph.Alignment> res = new PriorityQueue<>();
 		for(String s : sg.adj.keySet())
 		{
+			if(Settings.VERBOSE)
+			{
+				System.err.println("Searching for edges from " + s);
+			}
 			for(int strand = 0; strand < 2; strand++)
 			{
 				ArrayList<ScaffoldGraph.Alignment> als = sg.adj.get(s)[strand];
@@ -78,7 +82,13 @@ public class ScaffoldGraphBuilder {
 						totalWeight += a.weight;
 						valid.add(a);
 						a.from = s;
-						intervals.add(new ScaffoldGraph.ReadInterval(a));
+						ScaffoldGraph.ReadInterval ri = new ScaffoldGraph.ReadInterval(a);
+						if(Settings.VERBOSE)
+						{
+							System.err.println("Adding read interval (from prefix): " + ri.readName
+									+ " " + ri.from + " " + ri.to + " " + ri.start + " " + ri.end);
+						}
+						intervals.add(ri);
 					}
 					
 					if(valid.size() > 0)
@@ -87,6 +97,12 @@ public class ScaffoldGraphBuilder {
 						toAdd.from = s;
 						toAdd.weight = totalWeight;
 						toAdd.allReads = intervals;
+						if(Settings.VERBOSE)
+						{
+							System.err.println("Adding consensus edge to graph: ");
+							System.err.println(" from=" + toAdd.from + ", myContigPrefix=" + toAdd.myContigPrefix +
+									", to=" + toAdd.to + ", theirContigPrefix=" + toAdd.theirContigPrefix);
+						}
 						res.add(toAdd);
 					}
 					
@@ -102,7 +118,13 @@ public class ScaffoldGraphBuilder {
 						totalWeight += a.weight;
 						valid.add(a);
 						a.from = s;
-						intervals.add(new ScaffoldGraph.ReadInterval(a));
+						ScaffoldGraph.ReadInterval ri = new ScaffoldGraph.ReadInterval(a);
+						if(Settings.VERBOSE)
+						{
+							System.err.println("Adding read interval (from suffix): " + ri.readName
+									+ " " + ri.from + " " + ri.to + " " + ri.start + " " + ri.end);
+						}
+						intervals.add(ri);
 					}
 					if(valid.size() > 0)
 					{
@@ -110,6 +132,12 @@ public class ScaffoldGraphBuilder {
 						toAdd.from = s;
 						toAdd.weight = totalWeight;
 						toAdd.allReads = intervals;
+						if(Settings.VERBOSE)
+						{
+							System.err.println("Adding consensus edge to graph: ");
+							System.err.println(" from=" + toAdd.from + ", myContigPrefix=" + toAdd.myContigPrefix +
+									", to=" + toAdd.to + ", theirContigPrefix=" + toAdd.theirContigPrefix);
+						}
 						res.add(toAdd);
 					}
 				}

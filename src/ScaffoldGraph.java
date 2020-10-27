@@ -33,6 +33,14 @@ public class ScaffoldGraph {
 				continue;
 			}
 			
+			if(Settings.VERBOSE)
+			{
+				System.err.println("Taking edge:");
+				System.err.println(" from=" + best.from + ", myContigPrefix=" + best.myContigPrefix +
+						", to=" + best.to + ", theirContigPrefix=" + best.theirContigPrefix);
+			
+			}
+			
 			// Once weights get too small, stop
 			if(best.weight < Settings.MIN_WEIGHT_SUPPORT)
 			{
@@ -47,12 +55,21 @@ public class ScaffoldGraph {
 			}
 			String t = best.to;
 			
+			if(Settings.VERBOSE)
+			{
+				System.err.println("Confirmed edge addition from " + s + " to " + t);
+			}
+			
 			if(!res.usedContigs.contains(t))
 			{
 				// t is by itself in a contig
 				
 				if(res.usedContigs.contains(s))
 				{
+					if(Settings.VERBOSE)
+					{
+						System.err.println("  From contig in larger scaffold to lone contig");
+					}
 					// s is the last contig in some scaffold
 					String firstContigInScaffold = lastToFirst.get(s);
 					ArrayDeque<String> allContigsInScaffold = res.scaffoldContigs.get(firstContigInScaffold);
@@ -66,6 +83,10 @@ public class ScaffoldGraph {
 				}
 				else
 				{
+					if(Settings.VERBOSE)
+					{
+						System.err.println("  From one lone contig to another");
+					}
 					// s hasn't been connected to anything yet
 					res.scaffoldEdges.put(s, new ArrayDeque<ScaffoldGraph.Alignment>());
 					res.scaffoldContigs.put(s, new ArrayDeque<String>());
@@ -87,6 +108,10 @@ public class ScaffoldGraph {
 				String tScaffoldKey = tFirst ? t : lastContigInScaffold;
 				if(res.usedContigs.contains(s))
 				{
+					if(Settings.VERBOSE)
+					{
+						System.err.println("  From one scaffold to another");
+					}
 					// s is the last contig in a scaffold, so append the scaffold with to after s
 					String firstContigInScaffold = lastToFirst.get(s);
 					lastToFirst.remove(s);
@@ -108,7 +133,9 @@ public class ScaffoldGraph {
 						while(!tScaffoldEdges.isEmpty())
 						{
 							ScaffoldGraph.Alignment cur = tScaffoldEdges.pollFirst();
-							toAdd.addLast(cur.reverse(lastTo));
+							Alignment rev = cur.reverse(lastTo);
+							rev.from = cur.to;
+							toAdd.addLast(rev);
 							lastTo = cur.to;
 						}
 						while(!toAdd.isEmpty())
@@ -132,6 +159,10 @@ public class ScaffoldGraph {
 				}
 				else
 				{
+					if(Settings.VERBOSE)
+					{
+						System.err.println("  From lone contig to a larger scaffold");
+					}
 					// s is on its own, so add it to the beginning of the scaffold with t
 					if(tFirst)
 					{
@@ -155,7 +186,9 @@ public class ScaffoldGraph {
 						while(!res.scaffoldEdges.get(tScaffoldKey).isEmpty())
 						{
 							ScaffoldGraph.Alignment cur = res.scaffoldEdges.get(tScaffoldKey).pollFirst();
-							toAdd.addLast(cur.reverse(lastTo));
+							Alignment rev = cur.reverse(lastTo);
+							rev.from = cur.to;
+							toAdd.addLast(rev);
 							lastTo = cur.to;
 						}
 						while(!toAdd.isEmpty())

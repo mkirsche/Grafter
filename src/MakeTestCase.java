@@ -127,20 +127,24 @@ public class MakeTestCase {
 
 		String overlapSeq = randomSeq(overlap);
 		String overlapSeq2 = randomSeq(overlap);
-		String ctg1 = randomSeq(contigLen1 - overlap) + overlapSeq;
-		String ctg2 = overlapSeq + randomSeq(contigLen2 - 2*overlap) + overlapSeq2;
-		String ctg3 = overlapSeq2 + randomSeq(contigLen1 - overlap);
+		String overlapSeq3 = randomSeq(overlap);
+		String ctg1 = ReadUtils.reverseComplement(randomSeq(contigLen1 - overlap) + overlapSeq);
+		String ctg2 = ReadUtils.reverseComplement(overlapSeq + randomSeq(contigLen2 - 2*overlap) + overlapSeq2);
+		String ctg3 = overlapSeq2 + randomSeq(contigLen1 - 2*overlap) + overlapSeq3;
+		String ctg4 = overlapSeq3 + randomSeq(contigLen1 - overlap);
 		
 		PrintWriter out = new PrintWriter(new File(contigsFn));
-		out.println(">contig1");
-		out.println(ctg1);
 		out.println(">contig2");
+		out.println(ReadUtils.reverseComplement(ctg1));
+		out.println(">contig1");
 		out.println(ctg2);
-		out.println(">contig3");
+		out.println(">contig4");
 		out.println(ctg3);
+		out.println(">contig3");
+		out.println(ReadUtils.reverseComplement(ctg4));
 		out.close();
 		
-		String readSeq = ctg1.substring(ctg1.length() - readC1) + ctg2.substring(overlap) + ctg3.substring(overlap, readC2);
+		String readSeq = ctg1.substring(ctg1.length() - readC1) + ctg2.substring(overlap) + ctg3.substring(overlap) + randomSeq(1000) + ctg4.substring(0, readC2);
 		out = new PrintWriter(new File(readsFn));
 		out.println(">read1");
 		out.println(readSeq);
@@ -159,11 +163,11 @@ public class MakeTestCase {
 				readSeq.length(),
 				0,
 				readC1,
-				'+',
-				"contig1",
+				'-',
+				"contig2",
 				contigLen1,
-				ctg1.length() - readC1,
-				ctg1.length(),
+				0,
+				readC1,
 				0,
 				0,
 				60
@@ -172,9 +176,9 @@ public class MakeTestCase {
 				"read1",
 				readSeq.length(),
 				readC1 - overlap,
-				readSeq.length() - readC2 + overlap,
+				readC1 - overlap + contigLen2,
 				'+',
-				"contig2",
+				"contig1",
 				contigLen2,
 				0,
 				contigLen2,
@@ -185,13 +189,27 @@ public class MakeTestCase {
 		out.printf("%s\t%d\t%d\t%d\t%c\t%s\t%d\t%d\t%d\t%d\t%d\t%d\n", 
 				"read1",
 				readSeq.length(),
-				readSeq.length() - readC2,
-				readSeq.length(),
+				readC1 - 2*overlap + contigLen2,
+				readC1 - 2*overlap + contigLen2 + contigLen1,
 				'+',
-				"contig3",
+				"contig4",
 				contigLen1,
 				0,
-				readC2,
+				contigLen1,
+				0,
+				0,
+				60
+		);
+		out.printf("%s\t%d\t%d\t%d\t%c\t%s\t%d\t%d\t%d\t%d\t%d\t%d\n", 
+				"read1",
+				readSeq.length(),
+				readC1 - 2*overlap + contigLen2 + contigLen1 + 1000,
+				readC1 - 2*overlap + contigLen2 + contigLen1 + 1000 + readC2,
+				'-',
+				"contig3",
+				contigLen1,
+				contigLen1 - readC2,
+				contigLen1,
 				0,
 				0,
 				60
