@@ -320,6 +320,14 @@ public static void main(String[] args) throws Exception
 					boolean fromLeft = interval.from.equals(aln.from) ? aln.myContigPrefix : aln.theirContigPrefix;
 					boolean toLeft = interval.from.equals(aln.from) ? aln.theirContigPrefix : aln.myContigPrefix;
 					int start = interval.start, end = interval.end;
+					if(!interval.from.equals(aln.from))
+					{
+						System.err.println("Flipping strand");
+						interval.strand = 1 - interval.strand;
+						int tmp = interval.start;
+						interval.start = interval.readLength - interval.end;
+						interval.end = interval.readLength - tmp;
+					}
 					if(interval.strand == 1)
 					{
 						start = interval.readLength - interval.end;

@@ -8,6 +8,7 @@ public class MakeTestCase {
 		makeTest(1, 100000, 80000, 70000, 60000, 5000);
 		makeTest(2, 100000, 80000, 70000, 60000, 5000);
 		makeOverlapTest(3, 100000, 200000, 70000, 60000, 1000);
+		makeBigTest(4, 100000, 60000, 5000);
 	}
 	
 	static void makeTest(int testNum, int contigLen1, int contigLen2, int readC1, int readC2, int readOnlyLen) throws Exception
@@ -114,6 +115,108 @@ public class MakeTestCase {
 					60
 			);	
 		}
+		out.close();
+		
+	}
+	
+	static void makeBigTest(int testNum, int contigLen1, int readC1, int readOnlyLen) throws Exception
+	{
+		String contigsFn = "testcontigs" + testNum + ".fasta";
+		String readsFn = "testreads" + testNum + ".fasta";
+		String alnFn = "testaln" + testNum + ".paf";
+		String truthFn = "testtruth" + testNum + ".fasta";
+
+		String ctg1 = randomSeq(contigLen1);
+		String ctg2 = randomSeq(contigLen1);
+		String ctg3 = randomSeq(contigLen1);
+		String ctg4 = randomSeq(contigLen1);
+		String readOnly1 = randomSeq(readOnlyLen);
+		String readOnly2 = randomSeq(readOnlyLen);
+		String readOnly3 = randomSeq(readOnlyLen);
+		
+		PrintWriter out = new PrintWriter(new File(contigsFn));
+		out.println(">contig1");
+		out.println(ctg1);
+		out.println(">contig2");
+		out.println(ctg2);
+		out.println(">contig3");
+		out.println(ReadUtils.reverseComplement(ctg3));
+		out.println(">contig4");
+		out.println(ctg3);
+		out.close();
+		
+		String readSeq = ctg1.substring(ctg1.length() - readC1) + readOnly1 + ctg2 + readOnly2 + ctg3 + readOnly3 + ctg4.substring(0, readC1);
+		out = new PrintWriter(new File(readsFn));
+		out.println(">read1");
+		out.println(readSeq);
+
+		out.close();
+		
+		String genome = ctg1 + readOnly1 + ctg2 + readOnly2 + ctg3 + readOnly3 + ctg4;
+		out = new PrintWriter(new File(truthFn));
+		out.println(">scaffold1");
+		out.println(genome);
+		out.close();
+		
+		out = new PrintWriter(new File(alnFn));
+		
+		out.printf("%s\t%d\t%d\t%d\t%c\t%s\t%d\t%d\t%d\t%d\t%d\t%d\n", 
+				"read1",
+				readSeq.length(),
+				0,
+				readC1,
+				'+',
+				"contig1",
+				contigLen1,
+				ctg1.length() - readC1,
+				ctg1.length(),
+				0,
+				0,
+				60
+		);
+		out.printf("%s\t%d\t%d\t%d\t%c\t%s\t%d\t%d\t%d\t%d\t%d\t%d\n", 
+				"read1",
+				readSeq.length(),
+				readC1 + readOnlyLen,
+				readC1 + readOnlyLen + ctg2.length(),
+				'+',
+				"contig2",
+				ctg2.length(),
+				0,
+				ctg2.length(),
+				0,
+				0,
+				60
+		);
+		out.printf("%s\t%d\t%d\t%d\t%c\t%s\t%d\t%d\t%d\t%d\t%d\t%d\n", 
+				"read1",
+				readSeq.length(),
+				readC1 + ctg2.length() + 2*readOnlyLen,
+				readC1 + ctg2.length() + 2 *readOnlyLen + ctg3.length(),
+				'-',
+				"contig3",
+				ctg3.length(),
+				0,
+				ctg3.length(),
+				0,
+				0,
+				60
+		);
+		out.printf("%s\t%d\t%d\t%d\t%c\t%s\t%d\t%d\t%d\t%d\t%d\t%d\n", 
+				"read1",
+				readSeq.length(),
+				readSeq.length() - readC1,
+				readSeq.length(),
+				'+',
+				"contig4",
+				ctg4.length(),
+				0,
+				readC1,
+				0,
+				0,
+				60
+		);
+		
 		out.close();
 		
 	}
