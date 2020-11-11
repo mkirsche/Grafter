@@ -21,6 +21,7 @@ static String reverseComplement(String s)
 	for(int i = 0; i<n; i++)
 	{
 		char c = s.charAt(n-1-i);
+		res[i] = c;
 		if(c == 'a' || c == 'A') res[i] = (char)(c + 'T' - 'A');
 		if(c == 'c' || c == 'C') res[i] = (char)(c + 'G' - 'C');
 		if(c == 'g' || c == 'G') res[i] = (char)(c + 'C' - 'G');
